@@ -27,6 +27,8 @@ public abstract class AbstractSystem implements GameSystem {
 
         this.requiredComponents = collectRequiredComponents();
 
+        this.cm.registerSystem(this);
+
         // Если вообще никто в цепочке не объявил аннотацию, кидаем ошибку
         if (this.requiredComponents.isEmpty()) {
             throw new IllegalStateException(String.format(
@@ -39,22 +41,11 @@ public abstract class AbstractSystem implements GameSystem {
 
     @Override
     public void update() {
-        List<Entity> activeEntities = GameInitializer.activeEntities;
-        for (int i = 0; i < activeEntities.size(); i++) {
-            long id = activeEntities.get(i).getId();
-            if (matchesFilter(id)) {
-                updateEntity(id);
-            }
-        }
-    }
+        Set<Long> targets = cm.getEntitiesForSystem(this);
 
-    private boolean matchesFilter(long id) {
-        for (Class<? extends Component> componentClass : requiredComponents) {
-            if (!cm.has(id, componentClass)) {
-                return false;
-            }
+        for (long id : targets) {
+            updateEntity(id);
         }
-        return true;
     }
 
     /**
@@ -63,18 +54,14 @@ public abstract class AbstractSystem implements GameSystem {
     private Set<Class<? extends Component>> collectRequiredComponents() {
         Set<Class<? extends Component>> components = new HashSet<>();
         Class<?> currentClass = this.getClass();
-
-        // Идем вверх по иерархии, пока не упремся в Object или AbstractSystem
         while (currentClass != null && currentClass != Object.class) {
             Requires requiresAnn = currentClass.getAnnotation(Requires.class);
             if (requiresAnn != null) {
-                // Добавляем все компоненты из текущей аннотации в общий сет
                 components.addAll(Set.of(requiresAnn.value()));
             }
             currentClass = currentClass.getSuperclass();
         }
-
-        return Set.copyOf(components); // Возвращаем неизменяемый сет
+        return Set.copyOf(components);
     }
 
     protected abstract void updateEntity(long id);
