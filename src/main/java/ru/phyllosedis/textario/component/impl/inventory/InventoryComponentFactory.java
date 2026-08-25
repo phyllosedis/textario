@@ -18,7 +18,10 @@ public class InventoryComponentFactory extends ComponentFactory<InventoryCompone
 
     @Override
     public InventoryComponent create(InventoryComponent.Args componentArgs) {
-        return new InventoryComponent(componentArgs.size(), componentArgs.slots().stream()
+        return new InventoryComponent(
+                componentArgs.size(),
+                componentArgs.stackSize(),
+                componentArgs.slots().stream()
                 .map(e -> new InventoryComponent.Slot(e.type().ordinal(), e.count()))
                 .toList());
     }

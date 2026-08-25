@@ -6,9 +6,12 @@ import ru.phyllosedis.textario.system.AbstractSystem;
 import ru.phyllosedis.textario.type.Grade;
 
 public abstract class BeltSystem extends AbstractSystem {
-
-
     protected BeltSystem(ComponentFactoryManager cfm, ComponentManager cm, Grade grade) {
         super(cfm, cm, grade);
+    }
+
+    @Override
+    protected void updateEntity(long id) {
+
     }
 }

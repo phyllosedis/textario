@@ -31,7 +31,7 @@ public class GameInitializer implements CommandLineRunner {
 
         MiningComponent miningComponent = cfm.create(new MiningComponent.Args(resourceType, 1, 0, grade));
         PositionComponent positionComponent = cfm.create(new PositionComponent.Args(x, y));
-        InventoryComponent inventoryComponent = cfm.create(new InventoryComponent.Args(5, List.of(new InventoryComponent.ReadableSlot(resourceType, 0))));
+        InventoryComponent inventoryComponent = cfm.create(new InventoryComponent.Args(5, 1, List.of(new InventoryComponent.ReadableSlot(resourceType, 0))));
 
 
         cm.add(minerId, miningComponent);
