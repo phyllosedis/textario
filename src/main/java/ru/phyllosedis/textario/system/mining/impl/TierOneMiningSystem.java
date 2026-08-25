@@ -7,13 +7,17 @@ import ru.phyllosedis.textario.component.factory.ComponentFactoryManager;
 import ru.phyllosedis.textario.component.impl.meta.tier.TierOneMarkerComponent;
 import ru.phyllosedis.textario.system.Requires;
 import ru.phyllosedis.textario.system.mining.MiningSystem;
-import ru.phyllosedis.textario.type.Grade;
 
 @Order(10)
 @Component
 @Requires({TierOneMarkerComponent.class})
 public class TierOneMiningSystem extends MiningSystem {
     public TierOneMiningSystem(ComponentFactoryManager cfm, ComponentManager cm) {
-        super(cfm, cm, Grade.TIER_1);
+        super(cfm, cm);
+    }
+
+    @Override
+    protected double getBoost() {
+        return 1.0;
     }
 }

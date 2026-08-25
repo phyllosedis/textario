@@ -7,7 +7,7 @@ public enum ComponentType {
     POSITION,
 
     // meta
-    GRADE,
+    BUILDING,
     TIER_ONE,
     TIER_TWO,
     TIER_THREE,

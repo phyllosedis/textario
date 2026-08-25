@@ -59,4 +59,6 @@ public abstract class AbstractSystem implements GameSystem {
     }
 
     protected abstract void updateEntity(long id);
+
+    protected abstract double getBoost();
 }

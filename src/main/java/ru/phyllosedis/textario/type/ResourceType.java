@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 public enum ResourceType {
     IRON_ORE,
     COPPER_ORE,
+    NONE,
     UNDEFINED;
 
     private static final Map<Integer, ResourceType> BY_ORDINAL =
