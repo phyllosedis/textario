@@ -1,29 +1,23 @@
 package ru.phyllosedis.textario.system;
 
 import lombok.Getter;
-import ru.phyllosedis.textario.Entity;
-import ru.phyllosedis.textario.GameInitializer;
 import ru.phyllosedis.textario.component.Component;
 import ru.phyllosedis.textario.component.ComponentManager;
 import ru.phyllosedis.textario.component.factory.ComponentFactoryManager;
-import ru.phyllosedis.textario.type.Grade;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public abstract class AbstractSystem implements GameSystem {
     protected final ComponentFactoryManager cfm;
     protected final ComponentManager cm;
-    protected final Grade grade;
 
     @Getter
     private final Set<Class<? extends Component>> requiredComponents;
 
-    protected AbstractSystem(ComponentFactoryManager cfm, ComponentManager cm, Grade grade) {
+    protected AbstractSystem(ComponentFactoryManager cfm, ComponentManager cm) {
         this.cfm = cfm;
         this.cm = cm;
-        this.grade = grade;
 
         this.requiredComponents = collectRequiredComponents();
 

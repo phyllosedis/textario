@@ -20,7 +20,6 @@ public class MiningComponentFactory extends ComponentFactory<MiningComponent, Mi
         return new MiningComponent(
                 componentArgs.resourceType().ordinal(),
                 componentArgs.speed(),
-                componentArgs.progress(),
-                componentArgs.tier().ordinal());
+                componentArgs.progress());
     }
 }

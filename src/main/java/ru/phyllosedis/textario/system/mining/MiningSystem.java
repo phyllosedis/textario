@@ -3,6 +3,7 @@ package ru.phyllosedis.textario.system.mining;
 import ru.phyllosedis.textario.component.ComponentManager;
 import ru.phyllosedis.textario.component.factory.ComponentFactoryManager;
 import ru.phyllosedis.textario.component.impl.inventory.InventoryComponent;
+import ru.phyllosedis.textario.component.impl.meta.grade.GradeComponent;
 import ru.phyllosedis.textario.component.impl.mining.MiningComponent;
 import ru.phyllosedis.textario.component.impl.position.PositionComponent;
 import ru.phyllosedis.textario.system.AbstractSystem;
@@ -13,17 +14,19 @@ import ru.phyllosedis.textario.type.ResourceType;
 import java.util.ArrayList;
 import java.util.List;
 
-@Requires({MiningComponent.class, InventoryComponent.class, PositionComponent.class})
+@Requires({MiningComponent.class, InventoryComponent.class, PositionComponent.class, GradeComponent.class})
 public abstract class MiningSystem extends AbstractSystem {
 
-    protected MiningSystem(ComponentFactoryManager cfm, ComponentManager cm, Grade grade) {
-        super(cfm, cm, grade);
+    protected MiningSystem(ComponentFactoryManager cfm, ComponentManager cm) {
+        super(cfm, cm);
     }
 
     @Override
     protected void updateEntity(long id) {
         MiningComponent oldMining = cm.get(id, MiningComponent.class);
         InventoryComponent oldInv = cm.get(id, InventoryComponent.class);
+
+        Grade currentGrade = cm.get(id, GradeComponent.class).getGrade();
 
         ResourceType resType = ResourceType.getByOrdinal(oldMining.getResourceType());
 
@@ -52,7 +55,7 @@ public abstract class MiningSystem extends AbstractSystem {
         }
 
         // --- ЛОГИКА ПРОГРЕССА БУРЕНИЯ ---
-        int boostSpeed = Math.round(oldMining.getSpeed() * grade.getBoost());
+        int boostSpeed = Math.round(oldMining.getSpeed() * currentGrade.getBoost());
         int newProgress = oldMining.getProgress() + boostSpeed;
 
         boolean oreMined = false;
@@ -97,8 +100,7 @@ public abstract class MiningSystem extends AbstractSystem {
         MiningComponent.Args args = new MiningComponent.Args(
                 resType,
                 oldMining.getSpeed(),
-                newProgress,
-                grade
+                newProgress
         );
         cm.add(id, cfm.create(args));
     }
