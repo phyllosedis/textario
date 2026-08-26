@@ -1,4 +1,4 @@
-package ru.phyllosedis.textario.component.impl.transport;
+package ru.phyllosedis.textario.component.impl.meta.logistic.transport;
 
 import ru.phyllosedis.textario.component.Component;
 

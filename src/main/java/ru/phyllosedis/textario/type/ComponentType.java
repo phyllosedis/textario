@@ -12,6 +12,7 @@ public enum ComponentType implements Type<ComponentType> {
     CONTENT_STATE,
     OPERATION_FINISHED,
     DISPATCHED_PRODUCT,
+    TIER,
     TIER_ONE,
     TIER_TWO,
     TIER_THREE,

@@ -12,14 +12,16 @@ import ru.phyllosedis.textario.component.impl.meta.logistic.ContentStateComponen
 import ru.phyllosedis.textario.component.impl.meta.marker.state.gas.GasStateMarkerComponent;
 import ru.phyllosedis.textario.component.impl.meta.marker.state.liquid.LiquidStateMarkerComponent;
 import ru.phyllosedis.textario.component.impl.meta.marker.state.solid.SolidStateMarkerComponent;
-import ru.phyllosedis.textario.component.impl.meta.marker.tier.TierMarkers;
-import ru.phyllosedis.textario.component.impl.meta.marker.transport.BeltMarkerComponent;
+import ru.phyllosedis.textario.component.impl.meta.marker.tier.TierComponent;
 import ru.phyllosedis.textario.component.impl.meta.station.StationComponent;
 import ru.phyllosedis.textario.component.impl.mining.MiningComponent;
 import ru.phyllosedis.textario.component.impl.position.PositionComponent;
-import ru.phyllosedis.textario.component.impl.transport.impl.InserterComponent;
+import ru.phyllosedis.textario.service.facroty.transport.BeltFactory;
+import ru.phyllosedis.textario.service.facroty.transport.InserterFactory;
+import ru.phyllosedis.textario.service.facroty.transport.SplitterFactory;
 import ru.phyllosedis.textario.type.ContentType;
 import ru.phyllosedis.textario.type.ResourceType;
+import ru.phyllosedis.textario.type.Tier;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -29,6 +31,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class EntityBlueprintService {
     private final ComponentFactoryManager cfm;
     private final ComponentManager cm;
+    private final InserterFactory inserterFactory;
+    private final SplitterFactory splitterFactory;
+    private final BeltFactory beltFactory;
     private final AtomicLong idGenerator = new AtomicLong(0);
 
     /**
@@ -65,12 +70,12 @@ public class EntityBlueprintService {
         switch (state) {
             case SOLID -> cm.add(id, cfm.create(new SolidStateMarkerComponent.Args()));
             case LIQUID -> cm.add(id, cfm.create(new LiquidStateMarkerComponent.Args()));
-            case GAS ->
-                    cm.add(id, cfm.create(new GasStateMarkerComponent.Args())); // Добавь GasStateMarkerComponent в проект
+            case GAS -> cm.add(id, cfm.create(new GasStateMarkerComponent.Args()));
         }
 
         // Навешиваем маркер тира (TierOneMarkerComponent и т.д.) через наш автоматический хелпер
-        cm.add(id, TierMarkers.get(tier));
+//        cm.add(id, TierMarkers.get(tier));
+        cm.add(id, cfm.create(new TierComponent.Args(Tier.UNDEFINED.getByOrdinal(tier))));
 
         return id;
     }
@@ -81,15 +86,7 @@ public class EntityBlueprintService {
     public long createBelt(int x, int y, int tier) {
         long id = prepareEntity(x, y, 1, 1);
 
-        // Конвейер — это станция перемещения, ему нужен прогресс движения
-        cm.add(id, cfm.create(new StationComponent.Args(1.0, 0.0)));
-        cm.add(id, cfm.create(new ContentStateComponent.Args(ContentType.SOLID))); // Конвейеры возят только твердое
-
-        // Маркеры для реактивного кэша логистики
-        cm.add(id, cfm.create(new BeltMarkerComponent.Args()));
-        cm.add(id, cfm.create(new SolidStateMarkerComponent.Args()));
-        cm.add(id, TierMarkers.get(tier)); // Авто-тир скорости
-
+        beltFactory.create(id, tier);
         return id;
     }
 
@@ -98,14 +95,13 @@ public class EntityBlueprintService {
      */
     public long createInserter(int x, int y, int tier) {
         long id = prepareEntity(x, y, 1, 1);
+        inserterFactory.create(id, tier);
+        return id;
+    }
 
-        // Манипулятор — это станция, рука крутится по таймеру
-        cm.add(id, cfm.create(new StationComponent.Args(1.0, 0.0)));
-
-        // Маркеры для реактивного кэша манипуляторов
-        cm.add(id, cfm.create(new InserterComponent.Args()));
-        cm.add(id, TierMarkers.get(tier)); // Настраивает скорость поворота руки из аннотации
-
+    public long createSplitter(int x, int y, int tier, int splitMode) {
+        long id = prepareEntity(x, y, 1, 1);
+        splitterFactory.create(id, tier, splitMode);
         return id;
     }
 }

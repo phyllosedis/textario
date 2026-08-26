@@ -1,6 +1,6 @@
 package ru.phyllosedis.textario.type;
 
-public interface Type<TypeConcrete extends Enum<TypeConcrete>> {
+public interface Type<TypeConcrete extends Enum<TypeConcrete> & Type<TypeConcrete>> {
 
     TypeConcrete getUndefined();
 

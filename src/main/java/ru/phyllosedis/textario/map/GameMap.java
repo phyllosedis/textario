@@ -26,7 +26,7 @@ public class GameMap {
         // а в пару мест насыпаем залежи руды для тестов
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                terrainGrid[x][y] = ResourceType.NONE; // Добавь NONE в свой ResourceType enum
+                terrainGrid[x][y] = ResourceType.NONE;
             }
         }
         // TODO вынести генерацию карты

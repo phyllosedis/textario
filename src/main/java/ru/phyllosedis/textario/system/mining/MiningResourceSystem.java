@@ -3,14 +3,14 @@ package ru.phyllosedis.textario.system.mining;
 import ru.phyllosedis.textario.component.ComponentManager;
 import ru.phyllosedis.textario.component.factory.ComponentFactoryManager;
 import ru.phyllosedis.textario.component.impl.meta.marker.station.OperationFinishedMarkerComponent;
-import ru.phyllosedis.textario.component.impl.meta.marker.tier.AbstractTierComponent;
+import ru.phyllosedis.textario.component.impl.meta.marker.tier.TierComponent;
 import ru.phyllosedis.textario.component.impl.meta.station.product.DispatchedProductComponent;
 import ru.phyllosedis.textario.component.impl.mining.MiningComponent;
 import ru.phyllosedis.textario.system.Requires;
-import ru.phyllosedis.textario.system.progress.StationProgressSystem;
+import ru.phyllosedis.textario.system.station.StationProgressSystem;
 import ru.phyllosedis.textario.type.ResourceType;
 
-@Requires({MiningComponent.class, OperationFinishedMarkerComponent.class, AbstractTierComponent.class})
+@Requires({MiningComponent.class, OperationFinishedMarkerComponent.class, TierComponent.class})
 public abstract class MiningResourceSystem extends StationProgressSystem {
 
     public MiningResourceSystem(ComponentFactoryManager cfm, ComponentManager cm) {

@@ -1,4 +1,4 @@
-package ru.phyllosedis.textario.system.progress;
+package ru.phyllosedis.textario.system.station;
 
 import ru.phyllosedis.textario.component.ComponentManager;
 import ru.phyllosedis.textario.component.factory.ComponentFactoryManager;
@@ -17,23 +17,18 @@ public abstract class StationProgressSystem extends AbstractSystem {
     @Override
     protected void updateEntity(long id) {
         StationComponent station = cm.get(id, StationComponent.class);
+        double newProgress = station.getProgress() + station.getSpeed();
+        boolean isFinished = newProgress >= 100.0;
 
-        // Дробная математика на double
-        double boostSpeed = station.getSpeed() + 50;
-        double newProgress = station.getProgress() + boostSpeed;
-
-        boolean isFinished = false;
-        if (newProgress >= 100.0) {
-            newProgress = 0.0;
-            isFinished = true;
+        if (isFinished) {
+            int completedCycles = (int) (newProgress / 100.0);
+            newProgress %= 100.0;
         }
 
-        // Обновляем исключительно StationComponent
         cm.add(id, cfm.create(new StationComponent.Args(station.getSpeed(), newProgress)));
 
-        // Если цикл завершен — вешаем маркер готовности продукта
         if (isFinished) {
-            cm.add(id, cfm.create(new OperationFinishedMarkerComponent.Args()));
+            cm.add(id, cfm.create(new OperationFinishedMarkerComponent.Args(/*completedCycles*/)));
         }
     }
 }
