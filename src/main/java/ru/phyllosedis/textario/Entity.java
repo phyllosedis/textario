@@ -1,10 +1,10 @@
 package ru.phyllosedis.textario;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 @Getter
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class Entity {
-    private long id;
+    private final long id;
 }
