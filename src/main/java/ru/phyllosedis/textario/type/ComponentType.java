@@ -23,6 +23,8 @@ public enum ComponentType implements Type<ComponentType> {
     LIQUID_STATE,
     SOLID_STATE,
 
+    //transport
+    TRANSPORT,
     UNDEFINED;
 
     @Override

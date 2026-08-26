@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import ru.phyllosedis.textario.component.Component;
 import ru.phyllosedis.textario.component.ComponentManager;
-import ru.phyllosedis.textario.component.impl.meta.tier.BuildingTier;
+import ru.phyllosedis.textario.component.impl.meta.marker.tier.BuildingTier;
 import ru.phyllosedis.textario.system.AbstractSystem;
 import ru.phyllosedis.textario.system.Requires;
 
@@ -17,18 +18,26 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class SystemValidationPostProcessor implements BeanPostProcessor {
 
+    private final ConfigurableListableBeanFactory beanFactory;
     private final ComponentManager cm;
 
     @Override
     public @Nullable Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        // Нас интересуют только бины, наследующиеся от нашей AbstractSystem
         if (bean instanceof AbstractSystem system) {
             Class<?> clazz = system.getClass();
 
-            // 1. Собираем аннотации по всей цепочке наследования
-            Set<Class<? extends ru.phyllosedis.textario.component.Component>> required = collectComponents(clazz);
+            // 1. Собираем статические аннотации @Requires по всей цепочке наследования
+            // Используем изменяемый HashSet, чтобы иметь возможность докинуть маркер тира
+            Set<Class<? extends Component>> required = new HashSet<>(collectComponents(clazz));
 
-            // 2. Валидация №1: Проверяем, что аннотации вообще есть
+            // 2. МЕГА-ФИЧА: Если этот бин был создан динамически, достаем маркер тира
+            var beanDef = this.beanFactory.getBeanDefinition(beanName);
+            if (beanDef.hasAttribute("tierMarker")) {
+                Class<? extends Component> tierMarker = (Class<? extends Component>) beanDef.getAttribute("tierMarker");
+                required.add(tierMarker); // Докидываем маркер тира прямо в сет до валидации!
+            }
+
+            // 3. Валидация №1: Проверяем, что аннотации вообще есть
             if (required.isEmpty()) {
                 throw new IllegalStateException(String.format(
                         "Критическая ошибка! Система %s или её предки обязаны иметь аннотацию @Requires.",
@@ -36,13 +45,13 @@ public class SystemValidationPostProcessor implements BeanPostProcessor {
                 ));
             }
 
-            // 3. Валидация №2: Проверяем уникальность маркера тира
+            // 4. Валидация №2: Теперь проверка на уникальность тира отработает ИДЕАЛЬНО
             validateTierUniqueness(clazz, required);
 
-            // 4. Прокидываем собранный отвалидированный сет в систему
-            system.setRequiredComponents(required);
+            // 5. Прокидываем ОДИН РАЗ собранный, отвалидированный и полный сет в систему
+            system.setRequiredComponents(Set.copyOf(required));
 
-            // 5. Регистрируем систему в реактивном кэше
+            // 6. Регистрируем систему в реактивном кэше
             cm.registerSystem(system);
         }
         return bean;
