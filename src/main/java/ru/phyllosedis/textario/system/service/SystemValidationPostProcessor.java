@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.stereotype.Component;
+import ru.phyllosedis.textario.component.Component;
 import ru.phyllosedis.textario.component.ComponentManager;
 import ru.phyllosedis.textario.component.impl.meta.tier.BuildingTier;
 import ru.phyllosedis.textario.system.AbstractSystem;
@@ -13,7 +13,7 @@ import ru.phyllosedis.textario.system.Requires;
 import java.util.HashSet;
 import java.util.Set;
 
-@Component
+@org.springframework.stereotype.Component
 @RequiredArgsConstructor
 public class SystemValidationPostProcessor implements BeanPostProcessor {
 
@@ -48,7 +48,7 @@ public class SystemValidationPostProcessor implements BeanPostProcessor {
         return bean;
     }
 
-    private Set<Class<? extends ru.phyllosedis.textario.component.Component>> collectComponents(Class<?> startClass) {
+    private Set<Class<? extends Component>> collectComponents(Class<?> startClass) {
         Set<Class<? extends ru.phyllosedis.textario.component.Component>> components = new HashSet<>();
         Class<?> currentClass = startClass;
 
