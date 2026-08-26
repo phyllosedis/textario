@@ -8,12 +8,7 @@ import ru.phyllosedis.textario.type.ComponentType;
 public class InventoryComponentFactory extends ComponentFactory<InventoryComponent, InventoryComponent.Args> {
 
     public InventoryComponentFactory() {
-        super(ComponentType.INVENTORY);
-    }
-
-    @Override
-    public Class<InventoryComponent.Args> getArgsClass() {
-        return InventoryComponent.Args.class;
+        super(ComponentType.INVENTORY, InventoryComponent.Args.class);
     }
 
     @Override
@@ -22,7 +17,7 @@ public class InventoryComponentFactory extends ComponentFactory<InventoryCompone
                 componentArgs.size(),
                 componentArgs.stackSize(),
                 componentArgs.slots().stream()
-                .map(e -> new InventoryComponent.Slot(e.type().ordinal(), e.count()))
-                .toList());
+                        .map(e -> new InventoryComponent.Slot(e.type().ordinal(), e.count()))
+                        .toList());
     }
 }

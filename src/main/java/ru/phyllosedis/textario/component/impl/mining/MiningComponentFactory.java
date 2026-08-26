@@ -7,19 +7,11 @@ import ru.phyllosedis.textario.type.ComponentType;
 public class MiningComponentFactory extends ComponentFactory<MiningComponent, MiningComponent.Args> {
 
     public MiningComponentFactory() {
-        super(ComponentType.MINING);
-    }
-
-    @Override
-    public Class<MiningComponent.Args> getArgsClass() {
-        return MiningComponent.Args.class;
+        super(ComponentType.MINING, MiningComponent.Args.class);
     }
 
     @Override
     public MiningComponent create(MiningComponent.Args componentArgs) {
-        return new MiningComponent(
-                componentArgs.resourceType().ordinal(),
-                componentArgs.speed(),
-                componentArgs.progress());
+        return new MiningComponent(componentArgs.resourceType().ordinal());
     }
 }

@@ -7,12 +7,7 @@ import ru.phyllosedis.textario.type.ComponentType;
 @Component
 public class TierTwoMarkerComponentFactory extends ComponentFactory<TierTwoMarkerComponent, TierTwoMarkerComponent.Args> {
     public TierTwoMarkerComponentFactory() {
-        super(ComponentType.TIER_TWO);
-    }
-
-    @Override
-    public Class<TierTwoMarkerComponent.Args> getArgsClass() {
-        return TierTwoMarkerComponent.Args.class;
+        super(ComponentType.TIER_TWO, TierTwoMarkerComponent.Args.class);
     }
 
     @Override

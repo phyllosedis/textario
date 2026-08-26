@@ -8,12 +8,7 @@ import ru.phyllosedis.textario.type.ComponentType;
 public class PositionComponentFactory extends ComponentFactory<PositionComponent, PositionComponent.Args> {
 
     public PositionComponentFactory() {
-        super(ComponentType.POSITION);
-    }
-
-    @Override
-    public Class<PositionComponent.Args> getArgsClass() {
-        return PositionComponent.Args.class;
+        super(ComponentType.POSITION, PositionComponent.Args.class);
     }
 
     @Override

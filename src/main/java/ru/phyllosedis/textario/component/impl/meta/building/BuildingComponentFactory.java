@@ -8,12 +8,7 @@ import ru.phyllosedis.textario.type.ComponentType;
 public class BuildingComponentFactory extends ComponentFactory<BuildingComponent, BuildingComponent.Args> {
 
     public BuildingComponentFactory() {
-        super(ComponentType.BUILDING);
-    }
-
-    @Override
-    public Class<BuildingComponent.Args> getArgsClass() {
-        return BuildingComponent.Args.class;
+        super(ComponentType.BUILDING, BuildingComponent.Args.class);
     }
 
     @Override

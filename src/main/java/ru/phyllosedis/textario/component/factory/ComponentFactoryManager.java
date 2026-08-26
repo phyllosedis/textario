@@ -2,7 +2,6 @@ package ru.phyllosedis.textario.component.factory;
 
 import org.springframework.stereotype.Service;
 import ru.phyllosedis.textario.component.Component;
-import ru.phyllosedis.textario.type.ComponentType;
 
 import java.util.List;
 import java.util.Map;
