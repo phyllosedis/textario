@@ -18,6 +18,7 @@ public class GameInitializer implements CommandLineRunner {
     private final EntityBlueprintService entityBlueprintService;
     @Override
     public void run(String... args) throws Exception {
+        System.out.println("создаём бур");
         long miner = entityBlueprintService.createMiner(2, 4, ResourceType.IRON_ORE, ContentType.SOLID, 1);
 
     }

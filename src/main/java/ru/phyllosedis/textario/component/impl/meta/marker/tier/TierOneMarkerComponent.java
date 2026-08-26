@@ -9,7 +9,7 @@ import ru.phyllosedis.textario.type.ComponentType;
 @Getter
 @ToString
 @AutoFactory(ComponentType.TIER_ONE)
-public class TierOneMarkerComponent extends AbstractTierComponent implements BuildingTier {
+public class TierOneMarkerComponent extends AbstractTierComponent {
     protected TierOneMarkerComponent() {
         super();
     }
