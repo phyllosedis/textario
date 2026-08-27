@@ -9,7 +9,7 @@ import ru.phyllosedis.textario.type.ComponentType;
 
 @Getter
 @ToString
-@AutoFactory(ComponentType.MARKER)
+@AutoFactory(ComponentType.GAS_STATE)
 public class GasStateMarkerComponent extends Component {
     protected GasStateMarkerComponent() {
         super();

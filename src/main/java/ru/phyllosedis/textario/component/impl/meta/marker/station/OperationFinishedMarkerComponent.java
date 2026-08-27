@@ -2,9 +2,9 @@ package ru.phyllosedis.textario.component.impl.meta.marker.station;
 
 import lombok.Getter;
 import lombok.ToString;
+import ru.phyllosedis.textario.component.Component;
 import ru.phyllosedis.textario.component.factory.AutoFactory;
 import ru.phyllosedis.textario.component.factory.ComponentArgs;
-import ru.phyllosedis.textario.component.impl.meta.marker.MarkerComponent;
 import ru.phyllosedis.textario.type.ComponentType;
 
 /**
@@ -14,7 +14,7 @@ import ru.phyllosedis.textario.type.ComponentType;
 @Getter
 @ToString
 @AutoFactory(ComponentType.OPERATION_FINISHED)
-public class OperationFinishedMarkerComponent extends MarkerComponent {
+public class OperationFinishedMarkerComponent extends Component {
     protected OperationFinishedMarkerComponent() {
         super();
     }

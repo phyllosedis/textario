@@ -6,7 +6,7 @@ import ru.phyllosedis.textario.component.Component;
 import ru.phyllosedis.textario.component.factory.AutoFactory;
 import ru.phyllosedis.textario.component.factory.ComponentArgs;
 import ru.phyllosedis.textario.type.ComponentType;
-import ru.phyllosedis.textario.type.ContentState;
+import ru.phyllosedis.textario.type.ContentType;
 
 
 /**
@@ -25,7 +25,7 @@ public class ContentStateComponent extends Component {
         this.contentType = contentType;
     }
 
-    public record Args(ContentState type) implements ComponentArgs<ContentStateComponent> {
+    public record Args(ContentType type) implements ComponentArgs<ContentStateComponent> {
         @Override
         public ContentStateComponent instantiate() {
             return new ContentStateComponent(type.ordinal());

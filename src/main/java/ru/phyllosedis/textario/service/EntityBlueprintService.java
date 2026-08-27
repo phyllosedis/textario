@@ -11,14 +11,16 @@ import ru.phyllosedis.textario.component.impl.meta.logistic.ContentStateComponen
 import ru.phyllosedis.textario.component.impl.meta.marker.state.gas.GasStateMarkerComponent;
 import ru.phyllosedis.textario.component.impl.meta.marker.state.liquid.LiquidStateMarkerComponent;
 import ru.phyllosedis.textario.component.impl.meta.marker.state.solid.SolidStateMarkerComponent;
+import ru.phyllosedis.textario.component.impl.meta.marker.tier.TierComponent;
+import ru.phyllosedis.textario.component.impl.meta.station.StationComponent;
 import ru.phyllosedis.textario.component.impl.mining.MiningComponent;
 import ru.phyllosedis.textario.component.impl.position.PositionComponent;
-import ru.phyllosedis.textario.service.factory.miner.MinerFactory;
-import ru.phyllosedis.textario.service.factory.transport.conveyor.belt.BeltFactory;
-import ru.phyllosedis.textario.service.factory.transport.conveyor.splitter.SplitterFactory;
-import ru.phyllosedis.textario.service.factory.transport.inserter.InserterFactory;
-import ru.phyllosedis.textario.type.ContentState;
+import ru.phyllosedis.textario.service.facroty.transport.BeltFactory;
+import ru.phyllosedis.textario.service.facroty.transport.InserterFactory;
+import ru.phyllosedis.textario.service.facroty.transport.SplitterFactory;
+import ru.phyllosedis.textario.type.ContentType;
 import ru.phyllosedis.textario.type.ResourceType;
+import ru.phyllosedis.textario.type.Tier;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -27,9 +29,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class EntityBlueprintService {
     private final ComponentFactoryManager cfm;
     private final ComponentManager cm;
-
-    private final EntityFactory ef;
-
+    private final InserterFactory inserterFactory;
+    private final SplitterFactory splitterFactory;
+    private final BeltFactory beltFactory;
     private final AtomicLong idGenerator = new AtomicLong(0);
 
     /**
@@ -49,19 +51,27 @@ public class EntityBlueprintService {
     /**
      * 1. СОЗДАНИЕ БУРОВ / ШАХТ (Разные состояния материи)
      */
-    public long createMiner(int x, int y, ResourceType resourceType, ContentState state, int tier) {
-        long id = prepareEntity(x, y, 1, 1);
+    public long createMiner(int x, int y, ResourceType resourceType, ContentType state, int tier) {
+        long id = prepareEntity(x, y, 1, 1); // Буры обычно 1х1 клетки
 
-        ef.get(MinerFactory.class).create(id, tier);
-
+        // Навешиваем производственную базу и тип копаемого ресурса
+        cm.add(id, cfm.create(new StationComponent.Args(1.0, 0.0))); // Базовая скорость 1.0, прогресс 0
         cm.add(id, cfm.create(new MiningComponent.Args(resourceType)));
+
+        // Паспорт консистенции для логистики
         cm.add(id, cfm.create(new ContentStateComponent.Args(state)));
 
+        // Фильтры для реактивного кэша: навешиваем маркер состояния
         switch (state) {
             case SOLID -> cm.add(id, cfm.create(new SolidStateMarkerComponent.Args()));
             case LIQUID -> cm.add(id, cfm.create(new LiquidStateMarkerComponent.Args()));
             case GAS -> cm.add(id, cfm.create(new GasStateMarkerComponent.Args()));
         }
+
+        // Навешиваем маркер тира (TierOneMarkerComponent и т.д.) через наш автоматический хелпер
+//        cm.add(id, TierMarkers.get(tier));
+        cm.add(id, cfm.create(new TierComponent.Args(Tier.UNDEFINED.getByOrdinal(tier))));
+
         return id;
     }
 
@@ -70,7 +80,8 @@ public class EntityBlueprintService {
      */
     public long createBelt(int x, int y, int tier) {
         long id = prepareEntity(x, y, 1, 1);
-        ef.get(BeltFactory.class).create(id, tier);
+
+        beltFactory.create(id, tier);
         return id;
     }
 
@@ -79,13 +90,13 @@ public class EntityBlueprintService {
      */
     public long createInserter(int x, int y, int tier) {
         long id = prepareEntity(x, y, 1, 1);
-        ef.get(InserterFactory.class).create(id, tier);
+        inserterFactory.create(id, tier);
         return id;
     }
 
     public long createSplitter(int x, int y, int tier, int splitMode) {
         long id = prepareEntity(x, y, 1, 1);
-        ef.get(SplitterFactory.class).create(id, tier, splitMode);
+        splitterFactory.create(id, tier, splitMode);
         return id;
     }
 }

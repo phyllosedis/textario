@@ -1,6 +1,5 @@
 package ru.phyllosedis.textario.system.splitter;
 
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ru.phyllosedis.textario.component.ComponentManager;
 import ru.phyllosedis.textario.component.factory.ComponentFactoryManager;
@@ -13,7 +12,6 @@ import ru.phyllosedis.textario.type.SplitMode;
 
 @Requires({SplitterComponent.class, TransportPortComponent.class, TierComponent.class})
 @Component
-@Order(30)
 public class SplitterSystem extends AbstractSystem {
 
     public SplitterSystem(ComponentFactoryManager cfm, ComponentManager cm) {

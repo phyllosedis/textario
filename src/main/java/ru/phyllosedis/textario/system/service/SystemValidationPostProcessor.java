@@ -1,4 +1,4 @@
-package ru.phyllosedis.textario.system.postprocessor;
+package ru.phyllosedis.textario.system.service;
 
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;

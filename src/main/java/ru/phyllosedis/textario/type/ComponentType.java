@@ -7,15 +7,17 @@ public enum ComponentType implements Type<ComponentType> {
     POSITION,
 
     // meta
-    MARKER,
     BUILDING,
     STATION,
-    STATION_PROGRESS,
-    EXTRACTOR,
     CONTENT_STATE,
     OPERATION_FINISHED,
     DISPATCHED_PRODUCT,
     TIER,
+    TIER_ONE,
+    TIER_TWO,
+    TIER_THREE,
+    TIER_FOUR,
+    TIER_FIVE,
 
     //state
     GAS_STATE,
