@@ -6,7 +6,6 @@ import ru.phyllosedis.textario.Entity;
 import ru.phyllosedis.textario.GameInitializer;
 import ru.phyllosedis.textario.component.ComponentManager;
 import ru.phyllosedis.textario.component.factory.ComponentFactoryManager;
-import ru.phyllosedis.textario.component.impl.inventory.InventoryComponent;
 import ru.phyllosedis.textario.component.impl.meta.building.BuildingComponent;
 import ru.phyllosedis.textario.component.impl.meta.logistic.ContentStateComponent;
 import ru.phyllosedis.textario.component.impl.meta.marker.state.gas.GasStateMarkerComponent;
@@ -23,7 +22,6 @@ import ru.phyllosedis.textario.type.ContentType;
 import ru.phyllosedis.textario.type.ResourceType;
 import ru.phyllosedis.textario.type.Tier;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
@@ -62,9 +60,6 @@ public class EntityBlueprintService {
 
         // Паспорт консистенции для логистики
         cm.add(id, cfm.create(new ContentStateComponent.Args(state)));
-
-        // Внутренний склад (инвентарь на 5 слотов со стаками по 1, как мы договаривались)
-        cm.add(id, cfm.create(new InventoryComponent.Args(5, 1, List.of(new InventoryComponent.ReadableSlot(resourceType, 0)))));
 
         // Фильтры для реактивного кэша: навешиваем маркер состояния
         switch (state) {
