@@ -5,14 +5,22 @@ import ru.phyllosedis.textario.component.factory.ComponentFactoryManager;
 import ru.phyllosedis.textario.component.impl.meta.logistic.ContentStateComponent;
 import ru.phyllosedis.textario.component.impl.meta.marker.station.OperationFinishedMarkerComponent;
 import ru.phyllosedis.textario.component.impl.meta.marker.tier.TierComponent;
-import ru.phyllosedis.textario.component.impl.meta.station.product.DispatchedProductComponent;
+import ru.phyllosedis.textario.component.impl.meta.product.DispatchedProductComponent;
+import ru.phyllosedis.textario.component.impl.mining.ExtractionComponent;
 import ru.phyllosedis.textario.component.impl.mining.MiningComponent;
 import ru.phyllosedis.textario.component.impl.position.PositionComponent;
 import ru.phyllosedis.textario.system.Requires;
 import ru.phyllosedis.textario.system.station.StationProgressSystem;
 import ru.phyllosedis.textario.type.ResourceType;
 
-@Requires({MiningComponent.class, OperationFinishedMarkerComponent.class, TierComponent.class, ContentStateComponent.class, PositionComponent.class})
+@Requires({
+        MiningComponent.class,
+        OperationFinishedMarkerComponent.class,
+        TierComponent.class,
+        ContentStateComponent.class,
+        PositionComponent.class,
+        ExtractionComponent.class
+})
 public abstract class MiningResourceSystem extends StationProgressSystem {
 
     public MiningResourceSystem(ComponentFactoryManager cfm, ComponentManager cm) {
@@ -33,4 +41,9 @@ public abstract class MiningResourceSystem extends StationProgressSystem {
     }
 
     protected abstract void onComplete(long id, ResourceType resType);
+
+    @Override
+    protected double getSpeed(long id) {
+        return cm.get(id, ExtractionComponent.class).getSpeed();
+    }
 }

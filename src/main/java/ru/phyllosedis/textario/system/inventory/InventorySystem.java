@@ -1,11 +1,10 @@
 package ru.phyllosedis.textario.system.inventory;
 
-import org.springframework.stereotype.Component;
 import ru.phyllosedis.textario.component.ComponentManager;
 import ru.phyllosedis.textario.component.factory.ComponentFactoryManager;
 import ru.phyllosedis.textario.component.impl.inventory.InventoryComponent;
 import ru.phyllosedis.textario.component.impl.meta.logistic.ContentStateComponent;
-import ru.phyllosedis.textario.component.impl.meta.station.product.DispatchedProductComponent;
+import ru.phyllosedis.textario.component.impl.meta.product.DispatchedProductComponent;
 import ru.phyllosedis.textario.system.AbstractSystem;
 import ru.phyllosedis.textario.system.Requires;
 import ru.phyllosedis.textario.type.ResourceType;
