@@ -1,4 +1,4 @@
-package ru.phyllosedis.textario.component.impl.meta.station.product;
+package ru.phyllosedis.textario.component.impl.meta.product;
 
 import lombok.Getter;
 import lombok.ToString;

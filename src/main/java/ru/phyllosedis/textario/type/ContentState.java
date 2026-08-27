@@ -1,13 +1,13 @@
 package ru.phyllosedis.textario.type;
 
-public enum ContentType implements Type<ContentType> {
+public enum ContentState implements Type<ContentState> {
     SOLID,
     LIQUID,
     GAS,
     UNDEFINED;
 
     @Override
-    public ContentType getUndefined() {
+    public ContentState getUndefined() {
         return UNDEFINED;
     }
 
