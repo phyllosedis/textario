@@ -72,13 +72,12 @@ public class ComponentManager {
         }
     }
 
-    private boolean matchesSystemFilter(long id, Set<Class<? extends Component>> required) {
-        if (required.isEmpty()) return false;
-        for (Class<? extends Component> compClass : required) {
-            if (this.has(id, compClass)) {
-                return true;
-            }
-        }
-        return true;
+    protected boolean matchesSystemFilter(
+            long id,
+            Set<Class<? extends Component>> required
+    ) {
+        return required != null
+                && !required.isEmpty()
+                && required.stream().allMatch(component -> has(id, component));
     }
 }
