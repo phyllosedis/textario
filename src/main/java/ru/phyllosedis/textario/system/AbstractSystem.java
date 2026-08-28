@@ -4,14 +4,15 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.core.Ordered;
-import ru.phyllosedis.textario.component.Component;
-import ru.phyllosedis.textario.component.ComponentManager;
-import ru.phyllosedis.textario.component.factory.ComponentFactoryManager;
+import ru.phyllosedis.textario.engine.ecs.component.Component;
+import ru.phyllosedis.textario.engine.spring.ecs.ComponentManager;
+import ru.phyllosedis.textario.engine.spring.ecs.ComponentFactoryManager;
+import ru.phyllosedis.textario.engine.ecs.system.System;
 
 import java.util.Set;
 
 @RequiredArgsConstructor
-public abstract class AbstractSystem implements GameSystem, Ordered {
+public abstract class AbstractSystem implements System, Ordered {
     @Getter
     @Setter
     private int order = 0;

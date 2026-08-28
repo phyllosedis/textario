@@ -8,9 +8,9 @@ import com.tngtech.archunit.junit.ArchTest;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ru.phyllosedis.textario.system.AbstractSystem;
-import ru.phyllosedis.textario.system.belt.BeltSystem;
-import ru.phyllosedis.textario.system.inserter.InserterSystem;
-import ru.phyllosedis.textario.system.mining.MiningResourceSystem;
+import ru.phyllosedis.textario.logistics.belt.BeltSystem;
+import ru.phyllosedis.textario.logistics.inserter.InserterSystem;
+import ru.phyllosedis.textario.production.mining.MiningResourceSystem;
 
 import java.util.List;
 import java.util.Set;
@@ -18,7 +18,10 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@AnalyzeClasses(packages = "ru.phyllosedis.textario.system")
+/**
+ * Тестирует очередность обработки систем в приложении
+ * */
+@AnalyzeClasses(packages = "ru.phyllosedis.textario")
 class TextarioArchitectureTest {
 
     private static final List<Class<? extends AbstractSystem>> EXECUTION_PIPELINE = List.of(

@@ -15,14 +15,6 @@ public class EntityFactory {
         for (AbstractEntityFactory factory : list) {
             registry.put(factory.getClass(), factory);
         }
-        // TODO выстрелит если отказаться от AssociatedMarker.class
-//        Map<String, AbstractEntityFactory> beans = context.getBeansOfType(AbstractEntityFactory.class);
-//        for (AbstractEntityFactory factory : beans.values()) {
-//            if (factory.getClass().isAnnotationPresent(AssociatedMarker.class)) {
-//                Class<? extends MarkerComponent> marker = factory.getClass().getAnnotation(AssociatedMarker.class).value();
-//                registry.put(marker, factory);
-//            }
-//        }
     }
 
     @SuppressWarnings("unchecked")

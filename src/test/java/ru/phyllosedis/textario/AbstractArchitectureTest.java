@@ -6,6 +6,7 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
+import com.tngtech.archunit.lang.syntax.elements.GivenClassesConjunction;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -18,11 +19,20 @@ public abstract class AbstractArchitectureTest {
 
     protected abstract Class<?> getDomainClass();
 
-    public ArchRule getCheckRule() {
+    protected GivenClassesConjunction getConjunction() {
         return classes()
                 .that().areAssignableTo(getDomainClass())
-                .and().doNotHaveModifier(JavaModifier.ABSTRACT)
-                .should(haveAllAnnotations(getRequiredAnnotations()));
+                .and().doNotHaveModifier(JavaModifier.ABSTRACT);
+    }
+
+    protected ArchCondition<JavaClass> getAdditionalCondition() {
+        return haveAllAnnotations(getRequiredAnnotations());
+    }
+
+    public ArchRule getCheckRule() {
+        return getConjunction()
+                .should(haveAllAnnotations(getRequiredAnnotations()))
+                .andShould(getAdditionalCondition());
     }
 
     private static ArchCondition<JavaClass> haveAllAnnotations(List<Class<? extends Annotation>> annotations) {
