@@ -1,4 +1,4 @@
-package ru.phyllosedis.textario.engine.spring.ecs;
+package ru.phyllosedis.textario.engine.ecs;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +11,7 @@ import ru.phyllosedis.textario.logistics.inserter.InserterComponent;
 import ru.phyllosedis.textario.production.mining.MiningComponent;
 import ru.phyllosedis.textario.production.station.OperationFinishedMarkerComponent;
 import ru.phyllosedis.textario.production.station.TierMarkerComponent;
+import ru.phyllosedis.textario.resource.ContentState;
 import ru.phyllosedis.textario.resource.ResourceType;
 import ru.phyllosedis.textario.world.BuildingComponent;
 import ru.phyllosedis.textario.world.PositionComponent;
@@ -37,8 +38,8 @@ public class ComponentManagerTest {
     @Test
     @DisplayName("Сущность соответствует системе, если есть все требуемые компоненты")
     void entityMatchesSystemWhenItHasAllRequiredComponents() {
-        cm.add(entityId, new InserterComponent.Args(1.0, 1, 1).instantiate());
-        cm.add(entityId, new OperationFinishedMarkerComponent.Args().instantiate());
+        cm.add(entityId, new InserterComponent.Args(1.0, 1, 1, Set.of(ContentState.SOLID)).instantiate());
+        cm.add(entityId, new OperationFinishedMarkerComponent.Args(0).instantiate());
         cm.add(entityId, new TierMarkerComponent.Args().instantiate());
 
         Set<Class<? extends Component>> required = Set.of(
@@ -56,7 +57,7 @@ public class ComponentManagerTest {
     @Test
     @DisplayName("Сущность НЕ соответствует системе, если отсутствует один обязательный компонент")
     void entityDoesNotMatchSystemWhenOneRequiredComponentIsMissing() {
-        cm.add(entityId, new InserterComponent.Args(1.0, 1, 1).instantiate());
+        cm.add(entityId, new InserterComponent.Args(1.0, 1, 1, Set.of(ContentState.SOLID)).instantiate());
         cm.add(entityId, new TierMarkerComponent.Args().instantiate());
         // OperationFinishedMarkerComponent отсутствует
 
@@ -92,7 +93,7 @@ public class ComponentManagerTest {
     @Test
     @DisplayName("Сущность НЕ соответствует системе, если содержит только один из трёх обязательных компонентов")
     void entityDoesNotMatchSystemWhenItHasOnlyOneRequiredComponent() {
-        cm.add(entityId, new InserterComponent.Args(1.0, 1, 1).instantiate());
+        cm.add(entityId, new InserterComponent.Args(1.0, 1, 1, Set.of(ContentState.SOLID)).instantiate());
 
         Set<Class<? extends Component>> required = Set.of(
                 InserterComponent.class,
@@ -109,7 +110,7 @@ public class ComponentManagerTest {
     @Test
     @DisplayName("Сущность НЕ соответствует системе, если есть лишние компоненты, но отсутствует обязательный")
     void entityDoesNotMatchSystemWhenItHasExtraComponentsButMissingRequiredOne() {
-        cm.add(entityId, new InserterComponent.Args(1.0, 1, 1).instantiate());
+        cm.add(entityId, new InserterComponent.Args(1.0, 1, 1, Set.of(ContentState.SOLID)).instantiate());
         cm.add(entityId, new TierMarkerComponent.Args().instantiate());
         cm.add(entityId, new PositionComponent.Args(10, 20).instantiate());
         cm.add(entityId, new InventoryComponent.Args(5, 1, List.of(new InventoryComponent.ReadableSlot(ResourceType.UNDEFINED, 1))).instantiate());
@@ -157,8 +158,8 @@ public class ComponentManagerTest {
     void entityDoesNotMatchWhenAnyRequiredComponentIsMissing(
             Class<? extends Component> missingComponent
     ) {
-        cm.add(entityId, new InserterComponent.Args(1.0, 1, 1).instantiate());
-        cm.add(entityId, new OperationFinishedMarkerComponent.Args().instantiate());
+        cm.add(entityId, new InserterComponent.Args(1.0, 1, 1, Set.of(ContentState.SOLID)).instantiate());
+        cm.add(entityId, new OperationFinishedMarkerComponent.Args(0).instantiate());
         cm.add(entityId, new TierMarkerComponent.Args().instantiate());
 
         cm.remove(entityId, missingComponent);

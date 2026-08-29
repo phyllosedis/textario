@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import ru.phyllosedis.textario.AbstractArchitectureTest;
 import ru.phyllosedis.textario.engine.ecs.component.AssociatedMarker;
 import ru.phyllosedis.textario.engine.ecs.component.MarkerComponent;
-import ru.phyllosedis.textario.service.factory.AbstractEntityFactory;
+import ru.phyllosedis.textario.engine.ecs.entity.AbstractEntityFactory;
 
 import java.lang.annotation.Annotation;
 import java.util.List;

@@ -37,6 +37,9 @@ public class OccupancyGrid {
     }
 
     public boolean isCellOccupied(int x, int y) {
+        if (!grid.containsKey(x)) {
+            return false;
+        }
         return Optional.ofNullable(grid.get(x).get(y)).isPresent();
     }
 

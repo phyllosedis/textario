@@ -1,4 +1,4 @@
-package ru.phyllosedis.textario.production.mining.gas;
+package ru.phyllosedis.textario.resource.marker;
 
 import lombok.Getter;
 import lombok.ToString;
@@ -10,15 +10,15 @@ import ru.phyllosedis.textario.engine.ecs.component.ComponentType;
 @Getter
 @ToString
 @AutoFactory(ComponentType.MARKER)
-public class GasStateMarkerComponent extends Component {
-    protected GasStateMarkerComponent() {
+public class SolidStateMarkerComponent extends Component {
+    protected SolidStateMarkerComponent() {
         super();
     }
 
-    public record Args() implements ComponentArgs<GasStateMarkerComponent> {
+    public record Args() implements ComponentArgs<SolidStateMarkerComponent> {
         @Override
-        public GasStateMarkerComponent instantiate() {
-            return new GasStateMarkerComponent();
+        public SolidStateMarkerComponent instantiate() {
+            return new SolidStateMarkerComponent();
         }
     }
 }

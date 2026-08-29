@@ -14,6 +14,7 @@ public enum ComponentType implements Type<ComponentType> {
     STATION,
     STATION_PROGRESS,
     EXTRACTOR,
+    PRODUCE,
     CONTENT_STATE,
     OPERATION_FINISHED,
     DISPATCHED_PRODUCT,

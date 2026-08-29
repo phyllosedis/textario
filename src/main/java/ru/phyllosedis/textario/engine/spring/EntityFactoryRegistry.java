@@ -1,17 +1,17 @@
-package ru.phyllosedis.textario.service;
+package ru.phyllosedis.textario.engine.spring;
 
 
-import ru.phyllosedis.textario.service.factory.AbstractEntityFactory;
+import ru.phyllosedis.textario.engine.ecs.entity.AbstractEntityFactory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @org.springframework.stereotype.Component
-public class EntityFactory {
+public class EntityFactoryRegistry {
     private final Map<Class<? extends AbstractEntityFactory>, AbstractEntityFactory> registry = new ConcurrentHashMap<>();
 
-    public EntityFactory(List<AbstractEntityFactory> list) {
+    public EntityFactoryRegistry(List<AbstractEntityFactory> list) {
         for (AbstractEntityFactory factory : list) {
             registry.put(factory.getClass(), factory);
         }

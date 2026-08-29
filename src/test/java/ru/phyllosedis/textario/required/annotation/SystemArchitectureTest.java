@@ -7,7 +7,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ru.phyllosedis.textario.AbstractArchitectureTest;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
-import ru.phyllosedis.textario.system.AbstractSystem;
+import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
 
 import java.lang.annotation.Annotation;
 import java.util.List;

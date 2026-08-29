@@ -2,19 +2,19 @@ package ru.phyllosedis.textario.logistics.splitter;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import ru.phyllosedis.textario.engine.spring.ecs.ComponentManager;
-import ru.phyllosedis.textario.engine.spring.ecs.ComponentFactoryManager;
-import ru.phyllosedis.textario.logistics.port.LogisticPort;
-import ru.phyllosedis.textario.production.station.TierMarkerComponent;
-import ru.phyllosedis.textario.system.AbstractSystem;
+import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
+import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
+import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
+import ru.phyllosedis.textario.logistics.port.LogisticPort;
+import ru.phyllosedis.textario.resource.SystemOrder;
 
-@Requires({SplitterComponent.class, LogisticPort.class, TierMarkerComponent.class})
+@Requires({SplitterComponent.class, LogisticPort.class})
 @Component
-@Order(30)
+@Order(SystemOrder.BELT)
 public class SplitterSystem extends AbstractSystem {
 
-    public SplitterSystem(ComponentFactoryManager cfm, ComponentManager cm) {
+    public SplitterSystem(ComponentFactoryRegistry cfm, ComponentManager cm) {
         super(cfm, cm);
     }
 

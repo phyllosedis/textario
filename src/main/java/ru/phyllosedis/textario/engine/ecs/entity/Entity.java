@@ -1,4 +1,4 @@
-package ru.phyllosedis.textario.engine.ecs;
+package ru.phyllosedis.textario.engine.ecs.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

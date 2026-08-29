@@ -1,13 +1,12 @@
-package ru.phyllosedis.textario.system;
+package ru.phyllosedis.textario.engine.ecs.system;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.core.Ordered;
+import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.Component;
-import ru.phyllosedis.textario.engine.spring.ecs.ComponentManager;
-import ru.phyllosedis.textario.engine.spring.ecs.ComponentFactoryManager;
-import ru.phyllosedis.textario.engine.ecs.system.System;
+import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 
 import java.util.Set;
 
@@ -16,7 +15,7 @@ public abstract class AbstractSystem implements System, Ordered {
     @Getter
     @Setter
     private int order = 0;
-    protected final ComponentFactoryManager cfm;
+    protected final ComponentFactoryRegistry cfm;
     protected final ComponentManager cm;
 
     @Getter

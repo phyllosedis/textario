@@ -2,11 +2,7 @@ package ru.phyllosedis.textario.production.station;
 
 import lombok.Getter;
 import lombok.ToString;
-import ru.phyllosedis.textario.engine.ecs.component.AutoFactory;
-import ru.phyllosedis.textario.engine.ecs.component.ComponentArgs;
-import ru.phyllosedis.textario.engine.ecs.component.MarkerComponent;
-import ru.phyllosedis.textario.engine.ecs.component.Component;
-import ru.phyllosedis.textario.engine.ecs.component.ComponentType;
+import ru.phyllosedis.textario.engine.ecs.component.*;
 
 /**
  * Флаг вешается на сущность, когда её производственный цикл достиг 100%.
@@ -16,14 +12,16 @@ import ru.phyllosedis.textario.engine.ecs.component.ComponentType;
 @ToString
 @AutoFactory(ComponentType.OPERATION_FINISHED)
 public class OperationFinishedMarkerComponent extends Component implements MarkerComponent {
-    protected OperationFinishedMarkerComponent() {
-        super();
+    private final int completedCycles;
+
+    protected OperationFinishedMarkerComponent(int completedCycles) {
+        this.completedCycles = completedCycles;
     }
 
-    public record Args() implements ComponentArgs<OperationFinishedMarkerComponent> {
+    public record Args(int completedCycles) implements ComponentArgs<OperationFinishedMarkerComponent> {
         @Override
         public OperationFinishedMarkerComponent instantiate() {
-            return new OperationFinishedMarkerComponent();
+            return new OperationFinishedMarkerComponent(completedCycles);
         }
     }
 }

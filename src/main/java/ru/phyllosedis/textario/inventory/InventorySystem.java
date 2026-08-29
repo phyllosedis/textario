@@ -1,10 +1,10 @@
 package ru.phyllosedis.textario.inventory;
 
-import ru.phyllosedis.textario.engine.spring.ecs.ComponentManager;
-import ru.phyllosedis.textario.engine.spring.ecs.ComponentFactoryManager;
+import ru.phyllosedis.textario.engine.ecs.ComponentManager;
+import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.logistics.ContentStateComponent;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
-import ru.phyllosedis.textario.system.AbstractSystem;
+import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
 import ru.phyllosedis.textario.resource.ResourceType;
 
@@ -13,7 +13,7 @@ import java.util.List;
 
 @Requires({InventoryComponent.class, ContentStateComponent.class, DispatchedProductComponent.class})
 public abstract class InventorySystem extends AbstractSystem {
-    protected InventorySystem(ComponentFactoryManager cfm, ComponentManager cm) {
+    protected InventorySystem(ComponentFactoryRegistry cfm, ComponentManager cm) {
         super(cfm, cm);
     }
 

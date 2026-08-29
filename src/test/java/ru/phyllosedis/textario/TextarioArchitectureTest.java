@@ -7,7 +7,7 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-import ru.phyllosedis.textario.system.AbstractSystem;
+import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
 import ru.phyllosedis.textario.logistics.belt.BeltSystem;
 import ru.phyllosedis.textario.logistics.inserter.InserterSystem;
 import ru.phyllosedis.textario.production.mining.MiningResourceSystem;

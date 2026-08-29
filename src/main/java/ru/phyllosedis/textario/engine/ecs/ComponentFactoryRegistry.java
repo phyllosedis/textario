@@ -1,6 +1,5 @@
-package ru.phyllosedis.textario.engine.spring.ecs;
+package ru.phyllosedis.textario.engine.ecs;
 
-import org.springframework.stereotype.Service;
 import ru.phyllosedis.textario.engine.ecs.component.Component;
 import ru.phyllosedis.textario.engine.ecs.component.ComponentArgs;
 import ru.phyllosedis.textario.engine.ecs.component.ComponentFactory;
@@ -9,11 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Service
-public class ComponentFactoryManager {
+public class ComponentFactoryRegistry {
     private final Map<Class<?>, ComponentFactory<?, ?>> factories;
 
-    public ComponentFactoryManager(List<ComponentFactory<?, ?>> factoryList) {
+    public ComponentFactoryRegistry(List<ComponentFactory<?, ?>> factoryList) {
         this.factories = factoryList.stream()
                 .collect(Collectors.toMap(ComponentFactory::getArgsClass, factory -> factory));
     }

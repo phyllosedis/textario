@@ -1,13 +1,12 @@
-package ru.phyllosedis.textario.engine.spring.ecs;
+package ru.phyllosedis.textario.engine.ecs;
 
 import lombok.RequiredArgsConstructor;
 import ru.phyllosedis.textario.engine.ecs.component.Component;
-import ru.phyllosedis.textario.system.AbstractSystem;
+import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@org.springframework.stereotype.Component
 @RequiredArgsConstructor
 public class ComponentManager {
 

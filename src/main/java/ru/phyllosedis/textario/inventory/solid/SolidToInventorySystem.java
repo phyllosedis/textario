@@ -1,7 +1,7 @@
 package ru.phyllosedis.textario.inventory.solid;
 
-import ru.phyllosedis.textario.engine.spring.ecs.ComponentManager;
-import ru.phyllosedis.textario.engine.spring.ecs.ComponentFactoryManager;
+import ru.phyllosedis.textario.engine.ecs.ComponentManager;
+import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.logistics.ContentStateComponent;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.inventory.InventorySystem;
@@ -10,7 +10,7 @@ import ru.phyllosedis.textario.resource.ResourceType;
 
 
 public abstract class SolidToInventorySystem extends InventorySystem {
-    protected SolidToInventorySystem(ComponentFactoryManager cfm, ComponentManager cm) {
+    protected SolidToInventorySystem(ComponentFactoryRegistry cfm, ComponentManager cm) {
         super(cfm, cm);
     }
 
@@ -24,14 +24,14 @@ public abstract class SolidToInventorySystem extends InventorySystem {
         DispatchedProductComponent dispatched = cm.get(id, DispatchedProductComponent.class);
 
         // Используем твой метод insertItem из InventorySystem!
-        boolean success = insertItem(id, ResourceType.UNDEFINED.getByOrdinal(dispatched.getResourceType()));
+//        boolean success = insertItem(id, ResourceType.UNDEFINED.getByOrdinal(dispatched.getResourceType()));
 
-        if (success) {
-            // Если успешно переложили в инвентарь — очищаем буфер выдачи
-            cm.remove(id, DispatchedProductComponent.class);
-        } else {
-            System.out.println("[Бур #" + id + "] Внутренний инвентарь забит, руда ждет выгрузки манипулятором!");
-            // Буфер НЕ удаляем. Бур остановится (потому что ProductionProgressSystem можно научить не тикать, если буфер не пуст)
-        }
+//        if (success) {
+//             Если успешно переложили в инвентарь — очищаем буфер выдачи
+//            cm.remove(id, DispatchedProductComponent.class);
+//        } else {
+//            System.out.println("[Бур #" + id + "] Внутренний инвентарь забит, руда ждет выгрузки манипулятором!");
+//             Буфер НЕ удаляем. Бур остановится (потому что ProductionProgressSystem можно научить не тикать, если буфер не пуст)
+//        }
     }
 }

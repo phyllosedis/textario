@@ -3,6 +3,7 @@ package ru.phyllosedis.textario.resource;
 import lombok.Getter;
 import ru.phyllosedis.textario.resource.capability.Burnable;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 
@@ -75,11 +76,25 @@ public enum ResourceType implements Type<ResourceType> {
         this.capabilities = Collections.unmodifiableSet(mutable);
     }
 
-    @SafeVarargs
-    public final boolean hasCapability(
-            final Class<? extends ResourceCapability>... capability
+
+    public boolean hasExactCategory(
+            ResourceCategory requestCategory
+    ) {
+        return this.category.equals(requestCategory);
+    }
+
+    public boolean hasCapability(
+            Class<? extends ResourceCapability> capability
     ) {
         return capabilities.contains(capability);
+    }
+
+    @SafeVarargs
+    public final boolean hasAllCapabilities(
+            Class<? extends ResourceCapability>... required
+    ) {
+        return Arrays.stream(required)
+                .allMatch(capabilities::contains);
     }
 
     @Override

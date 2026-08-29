@@ -1,6 +1,6 @@
 package ru.phyllosedis.textario.engine.ecs.system.futureuse;
 
-import ru.phyllosedis.textario.system.AbstractSystem;
+import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

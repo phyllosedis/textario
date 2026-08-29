@@ -5,11 +5,11 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import ru.phyllosedis.textario.engine.spring.ecs.ComponentManager;
+import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.production.station.TierMarkerComponent;
 import ru.phyllosedis.textario.engine.ecs.component.Component;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
-import ru.phyllosedis.textario.system.AbstractSystem;
+import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,7 +34,7 @@ public class SystemValidationPostProcessor implements BeanPostProcessor {
                 ));
             }
 
-            validateTierUniqueness(clazz, required);
+//            validateTierUniqueness(clazz, required);
             system.setRequiredComponents(Set.copyOf(required));
 
             cm.registerSystem(system);
@@ -55,7 +55,7 @@ public class SystemValidationPostProcessor implements BeanPostProcessor {
         }
         return Set.copyOf(components);
     }
-
+/*
     private void validateTierUniqueness(Class<?> clazz, Set<Class<? extends Component>> components) {
         long tierCount = components.stream()
                 .filter(TierMarkerComponent.class::isAssignableFrom)
@@ -75,6 +75,6 @@ public class SystemValidationPostProcessor implements BeanPostProcessor {
                     clazz.getSimpleName(), tierCount
             ));
         }
-    }
+    }*/
 
 }
