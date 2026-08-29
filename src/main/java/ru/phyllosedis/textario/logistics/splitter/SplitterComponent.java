@@ -13,7 +13,7 @@ import ru.phyllosedis.textario.engine.ecs.component.ComponentType;
 public class SplitterComponent extends LogisticComponent {
     private final int splitMode;
 
-    public SplitterComponent(int splitMode) {
+    protected SplitterComponent(int splitMode) {
         this.splitMode = splitMode;
     }
 
