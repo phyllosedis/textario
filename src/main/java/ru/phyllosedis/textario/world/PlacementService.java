@@ -1,18 +1,19 @@
 package ru.phyllosedis.textario.world;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.phyllosedis.textario.engine.spring.ecs.ComponentManager;
 import ru.phyllosedis.textario.resource.ResourceType;
 
+/**
+ * Атомарная проверка и размещение
+ */
 @Service
+@RequiredArgsConstructor
 public class PlacementService {
-    private final GameMap gameMap;
-    private final ComponentManager cm;
 
-    public PlacementService(GameMap gameMap, ComponentManager cm) {
-        this.gameMap = gameMap;
-        this.cm = cm;
-    }
+    private final OccupancyGrid occupancyGrid;
+    private final ComponentManager cm;
 
     /**
      * Валидация: можно ли воткнуть постройку размером WxH на координаты X:Y
@@ -22,13 +23,13 @@ public class PlacementService {
             for (int y = startY; y < startY + height; y++) {
 
                 // 1. Проверка границ карты
-                if (x < 0 || x >= gameMap.getWidth() || y < 0 || y >= gameMap.getHeight()) return false;
+                if (x < 0 || x >= occupancyGrid.getWidth() || y < 0 || y >= occupancyGrid.getHeight()) return false;
 
                 // 2. Проверка на занятость другой постройкой
-                if (gameMap.isCellOccupied(x, y)) return false;
+                if (occupancyGrid.isCellOccupied(x, y)) return false;
 
                 // 3. Проверка типа земли (например, Бур можно ставить ТОЛЬКО на руду)
-                if (requiredTerrain != ResourceType.UNDEFINED && gameMap.getTerrainAt(x, y) != requiredTerrain) {
+                if (requiredTerrain != ResourceType.UNDEFINED && occupancyGrid.getTerrainAt(x, y) != requiredTerrain) {
                     return false;
                 }
             }
@@ -42,7 +43,7 @@ public class PlacementService {
     public void registerBuildingOnMap(long entityId, int startX, int startY, int width, int height) {
         for (int x = startX; x < startX + width; x++) {
             for (int y = startY; y < startY + height; y++) {
-                gameMap.occupyCell(x, y, entityId);
+                occupancyGrid.occupyCell(x, y, entityId);
             }
         }
     }

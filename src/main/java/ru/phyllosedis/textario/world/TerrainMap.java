@@ -4,6 +4,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.phyllosedis.textario.resource.ResourceType;
 
+/**
+ * Тип поверхности/ресурс клетки
+ */
 @Component
 public class TerrainMap {
     private final int width;
@@ -19,6 +22,10 @@ public class TerrainMap {
         this.terrain = new int[width][height];
 
         generate();
+    }
+
+    public int getTerrainType(int x, int y) {
+        return terrain[x][y];
     }
 
     private void generate() {
