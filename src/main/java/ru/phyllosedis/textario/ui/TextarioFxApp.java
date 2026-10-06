@@ -62,7 +62,8 @@ public class TextarioFxApp extends Application {
             'S', Color.web("#a030e0"),
             'C', Color.web("#c08040"),
             'F', Color.web("#e04030"),
-            'A', Color.web("#30c060")
+            'A', Color.web("#30c060"),
+            'U', Color.web("#707070")
     );
 
     private WorldView worldView;
@@ -153,6 +154,15 @@ public class TextarioFxApp extends Application {
             statusSim.setText(nowPaused ? "пауза" : "тикает");
         });
 
+        Button saveBtn = new Button("Сохранить");
+        saveBtn.setOnAction(e -> info.setText(parser.execute("save") + "\n---\n" + info.getText()));
+        Button loadBtn = new Button("Загрузить");
+        loadBtn.setOnAction(e -> {
+            info.setText(parser.execute("load") + "\n---\n" + info.getText());
+            redraw();
+        });
+        HBox saveRow = new HBox(8, pause, saveBtn, loadBtn);
+
         info = new TextArea();
         info.setEditable(false);
         info.setFont(Font.font("Monospaced", 12));
@@ -173,7 +183,7 @@ public class TextarioFxApp extends Application {
         statusSim = new Label("тикает");
         statusPos = new Label("?:?");
 
-        VBox side = new VBox(8, pause, statusSim, statusPos, info, cmd);
+        VBox side = new VBox(8, saveRow, statusSim, statusPos, info, cmd);
         side.setPadding(new Insets(8));
         side.setPrefWidth(340);
 
@@ -256,7 +266,15 @@ public class TextarioFxApp extends Application {
         menu.getItems().add(buildItem("Сундук", () -> commands.placeChest(x, y)));
         menu.getItems().add(buildItem("Печь", () -> commands.placeFurnace(x, y)));
         menu.getItems().add(buildItem("Сборщик", () -> commands.placeAssembler(x, y)));
-        menu.getItems().add(buildItem("Разделитель", () -> commands.placeSplitter(x, y, SplitMode.ROUND_ROBIN)));
+        menu.getItems().add(dirMenu("Разделитель",
+                (xx, yy, rot) -> commands.placeSplitter(xx, yy, SplitMode.ROUND_ROBIN, rot), x, y));
+        javafx.scene.control.Menu under = new javafx.scene.control.Menu("Подземка");
+        javafx.scene.control.Menu entry = dirMenu("Вход",
+                (xx, yy, rot) -> commands.placeUnderground(xx, yy, rot, "entry"), x, y);
+        javafx.scene.control.Menu exit = dirMenu("Выход",
+                (xx, yy, rot) -> commands.placeUnderground(xx, yy, rot, "exit"), x, y);
+        under.getItems().addAll(entry, exit);
+        menu.getItems().add(under);
         menu.getItems().add(new SeparatorMenuItem());
         MenuItem cancel = new MenuItem("Отмена (Esc)");
         cancel.setOnAction(ev -> menu.hide());
@@ -421,6 +439,28 @@ public class TextarioFxApp extends Application {
                 }
                 g.strokeOval(cx - s * 0.22, cy - s * 0.22, s * 0.44, s * 0.44);
                 g.fillOval(cx - s * 0.08, cy - s * 0.08, s * 0.16, s * 0.16);
+            }
+            case 'U' -> {
+                // Подземка: тёмный зев + стрелка (вход — внутрь, выход — наружу)
+                g.setLineWidth(Math.max(1.5, s * 0.08));
+                g.strokeOval(cx - s * 0.24, cy - s * 0.24, s * 0.48, s * 0.48);
+                g.fillOval(cx - s * 0.17, cy - s * 0.17, s * 0.34, s * 0.34);
+                boolean entry = "ENTRY".equals(c.tag());
+                PortSide side = entry
+                        ? c.inputs().stream().findFirst().orElse(PortSide.BACK)
+                        : c.outputs().stream().findFirst().orElse(PortSide.FRONT);
+                double[] dir = dirOf(side);
+                double[] edge = edgeCenter(side, px, py, s);
+                g.setStroke(Color.BLACK);
+                g.setLineWidth(Math.max(2, s * 0.12));
+                if (entry) {
+                    g.strokeLine(edge[0], edge[1], cx + dir[0] * s * 0.1, cy + dir[1] * s * 0.1);
+                    drawHead(g, new double[]{cx + dir[0] * s * 0.1, cy + dir[1] * s * 0.1},
+                            dir, Math.max(4, s * 0.18), true);
+                } else {
+                    g.strokeLine(cx - dir[0] * s * 0.1, cy - dir[1] * s * 0.1, edge[0], edge[1]);
+                    drawHead(g, edge, dir, Math.max(4, s * 0.18), true);
+                }
             }
             default -> {
                 g.setFont(Font.font("Monospaced", Math.max(8, s * 0.5)));

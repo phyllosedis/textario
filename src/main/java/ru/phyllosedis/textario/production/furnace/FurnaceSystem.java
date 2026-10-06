@@ -43,32 +43,73 @@ public class FurnaceSystem extends AbstractSystem {
 
         if (oreSlot == null) {
             // Нечего плавить — холостой цикл
-            cm.add(id, cfm.create(new ProgressComponent.Args(0.0)));
-            cm.remove(id, OperationFinishedMarkerComponent.class);
+            idle(id);
             return;
         }
 
         ResourceType ore = ResourceType.UNDEFINED.getByOrdinal(oreSlot.resource());
         RecipeBook.Recipe recipe = book.furnaceRecipeFor(ore).orElse(null);
         if (recipe == null) {
-            cm.add(id, cfm.create(new ProgressComponent.Args(0.0)));
-            cm.remove(id, OperationFinishedMarkerComponent.class);
+            idle(id);
             return;
         }
         Map.Entry<ResourceType, Integer> output = recipe.outputs().entrySet().iterator().next();
         int need = recipe.inputs().getOrDefault(ore, 1);
+
+        // Дозаправка: жрём уголь из своего же склада.
+        // Инвентарь при этом пересоздаётся, поэтому слот руды перечитываем.
+        int heat = heatOf(id);
+        InventoryComponent inv = cm.get(id, InventoryComponent.class);
+        while (heat < Math.min(cycles, oreSlot.count() / need)) {
+            InventoryComponent.Slot fuelSlot = findFuelSlot(inv);
+            if (fuelSlot == null) {
+                break;
+            }
+            ResourceType fuelType = ResourceType.UNDEFINED.getByOrdinal(fuelSlot.resource());
+            consume(id, inv, fuelSlot, 1);
+            heat += book.fuelValue(fuelType);
+            inv = cm.get(id, InventoryComponent.class);
+        }
+
+        oreSlot = findSmeltableSlot(inv);
+        if (oreSlot == null) {
+            cm.add(id, cfm.create(new FuelComponent.Args(heat)));
+            idle(id);
+            return;
+        }
         int plates = Math.min(cycles, oreSlot.count() / need);
+        plates = Math.min(plates, heat);
 
         if (plates <= 0) {
-            cm.add(id, cfm.create(new ProgressComponent.Args(0.0)));
-            cm.remove(id, OperationFinishedMarkerComponent.class);
+            cm.add(id, cfm.create(new FuelComponent.Args(heat)));
+            idle(id);
             return;
         }
 
-        consume(id, inventory, oreSlot, need * plates);
+        consume(id, inv, oreSlot, need * plates);
+        cm.add(id, cfm.create(new FuelComponent.Args(heat - plates)));
         cm.add(id, cfm.create(new DispatchedProductComponent.Args(output.getKey(), output.getValue() * plates)));
         cm.add(id, cfm.create(new ProgressComponent.Args(0.0)));
         cm.remove(id, OperationFinishedMarkerComponent.class);
+    }
+
+    private void idle(long id) {
+        cm.add(id, cfm.create(new ProgressComponent.Args(0.0)));
+        cm.remove(id, OperationFinishedMarkerComponent.class);
+    }
+
+    private int heatOf(long id) {
+        FuelComponent fuel = cm.get(id, FuelComponent.class);
+        return fuel == null ? 0 : fuel.getHeat();
+    }
+
+    private InventoryComponent.Slot findFuelSlot(InventoryComponent inventory) {
+        return inventory.getSlots().stream()
+                .filter(slot -> slot.count() > 0)
+                .filter(slot -> book.fuelValue(
+                        ResourceType.UNDEFINED.getByOrdinal(slot.resource())) > 0)
+                .findFirst()
+                .orElse(null);
     }
 
     private InventoryComponent.Slot findSmeltableSlot(InventoryComponent inventory) {

@@ -6,6 +6,8 @@ import ru.phyllosedis.textario.logistics.belt.BeltFactory;
 import ru.phyllosedis.textario.logistics.inserter.InserterFactory;
 import ru.phyllosedis.textario.logistics.splitter.SplitMode;
 import ru.phyllosedis.textario.logistics.splitter.SplitterFactory;
+import ru.phyllosedis.textario.logistics.underground.UndergroundFactory;
+import ru.phyllosedis.textario.logistics.underground.UndergroundMode;
 import ru.phyllosedis.textario.production.assembler.AssemblerFactory;
 import ru.phyllosedis.textario.production.furnace.FurnaceFactory;
 import ru.phyllosedis.textario.production.mining.MinerFactory;
@@ -28,12 +30,30 @@ public class EntityBlueprintService {
     private final AtomicLong idGenerator = new AtomicLong(0);
     private final Map<Long, String> createdEntities = new ConcurrentHashMap<>();
 
+    /**
+     * Структурная запись для сохранений: вид, координаты, тир и
+     * неизменяемый параметр (руда бура / режим разделителя и подземки).
+     */
+    public record Placement(String kind, int x, int y, Tier tier, String extra) {
+    }
+
+    private final Map<Long, Placement> placements = new ConcurrentHashMap<>();
+
     public Map<Long, String> createdEntities() {
         return Map.copyOf(createdEntities);
     }
 
+    public Map<Long, Placement> placements() {
+        return Map.copyOf(placements);
+    }
+
     public void forget(long id) {
         createdEntities.remove(id);
+        placements.remove(id);
+    }
+
+    private void place(long id, Placement placement) {
+        placements.put(id, placement);
     }
 
     private void note(long id, String description) {
@@ -74,6 +94,7 @@ public class EntityBlueprintService {
                         .resourceType(resourceType)
                         .build());
         note(id, "miner@" + x + ":" + y + " " + resourceType);
+        place(id, new Placement("miner", x, y, tier, resourceType.name()));
         return id;
     }
 
@@ -93,6 +114,7 @@ public class EntityBlueprintService {
                 .rotation(rotation)
                 .build());
         note(id, "belt@" + x + ":" + y);
+        place(id, new Placement("belt", x, y, tier, ""));
         return id;
     }
 
@@ -111,26 +133,52 @@ public class EntityBlueprintService {
                 .rotation(rotation)
                 .build());
         note(id, "inserter@" + x + ":" + y);
+        place(id, new Placement("inserter", x, y, tier, ""));
         return id;
     }
 
     public long createSplitter(int x, int y, Tier tier, ResourceType resourceType, SplitMode splitMode) {
-        long id = prepareEntity(x, y, 2, 1, ResourceCategory.SOIL);
+        return createSplitter(x, y, tier, resourceType, splitMode, 0);
+    }
+
+    public long createSplitter(int x, int y, Tier tier, ResourceType resourceType, SplitMode splitMode, int rotation) {
+        int norm = ((rotation % 2) + 2) % 2;
+        int w = norm == 0 ? 2 : 1;
+        int h = norm == 0 ? 1 : 2;
+        long id = prepareEntity(x, y, w, h, ResourceCategory.SOIL);
         ef.get(SplitterFactory.class).create(SplitterFactory.Args.builder()
                 .splitMode(splitMode)
                 .id(id)
                 .tier(tier)
                 .x(x)
                 .y(y)
-                .width(2)
-                .height(1)
+                .width(w)
+                .height(h)
+                .rotation(rotation)
                 .build());
         note(id, "splitter@" + x + ":" + y + " " + splitMode);
+        place(id, new Placement("splitter", x, y, tier, splitMode.name()));
         return id;
     }
 
-    public long createChest(int x, int y, Tier tier) {
+    public long createUnderground(int x, int y, Tier tier, int rotation, UndergroundMode mode) {
         long id = prepareEntity(x, y, 1, 1, ResourceCategory.SOIL);
+        ef.get(UndergroundFactory.class).create(UndergroundFactory.Args.builder()
+                .id(id)
+                .tier(tier)
+                .x(x)
+                .y(y)
+                .width(1)
+                .height(1)
+                .mode(mode)
+                .rotation(rotation)
+                .build());
+        note(id, "underground@" + x + ":" + y + " " + mode);
+        place(id, new Placement("underground", x, y, tier, mode.name()));
+        return id;
+    }
+
+    public long createChest(int x, int y, Tier tier) {        long id = prepareEntity(x, y, 1, 1, ResourceCategory.SOIL);
         ef.get(ChestFactory.class).create(ChestFactory.Args.builder()
                 .id(id)
                 .tier(tier)
@@ -140,6 +188,7 @@ public class EntityBlueprintService {
                 .height(1)
                 .build());
         note(id, "chest@" + x + ":" + y);
+        place(id, new Placement("chest", x, y, tier, ""));
         return id;
     }
 
@@ -154,6 +203,7 @@ public class EntityBlueprintService {
                 .height(2)
                 .build());
         note(id, "furnace@" + x + ":" + y);
+        place(id, new Placement("furnace", x, y, tier, ""));
         return id;
     }
 
@@ -168,6 +218,7 @@ public class EntityBlueprintService {
                 .height(2)
                 .build());
         note(id, "assembler@" + x + ":" + y);
+        place(id, new Placement("assembler", x, y, tier, ""));
         return id;
     }
 }

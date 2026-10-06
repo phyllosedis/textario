@@ -69,4 +69,19 @@ public class RecipeBook {
                 .filter(r -> r.inputs().containsKey(input))
                 .findFirst();
     }
+
+    private final Map<ResourceType, Integer> fuels = Map.of(
+            ResourceType.COAL, 4
+    );
+
+    /**
+     * Сколько плавок даёт единица топлива. 0 — не топливо.
+     */
+    public int fuelValue(ResourceType type) {
+        return fuels.getOrDefault(type, 0);
+    }
+
+    public Map<ResourceType, Integer> fuels() {
+        return fuels;
+    }
 }

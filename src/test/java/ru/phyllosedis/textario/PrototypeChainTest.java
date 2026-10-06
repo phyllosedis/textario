@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.phyllosedis.textario.bootstrap.TextarioApplication;
 import ru.phyllosedis.textario.console.GameCommands;
+import ru.phyllosedis.textario.world.SaveService;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.spring.EntityBlueprintService;
@@ -33,6 +34,9 @@ class PrototypeChainTest {
     @Autowired
     private GameCommands gameCommands;
 
+    @Autowired
+    private SaveService saves;
+
     @Test
     @DisplayName("Уголь доезжает из бура в сундук через манипулятор")
     void coalReachesChest() throws Exception {
@@ -56,7 +60,8 @@ class PrototypeChainTest {
     void furnaceSmeltsPlates() throws Exception {
         long furnace = blueprints.createFurnace(30, 30, Tier.ONE);
         cm.add(furnace, cfm.create(new InventoryComponent.Args(4, 50,
-                List.of(new InventoryComponent.ReadableSlot(ResourceType.IRON_ORE, 5)))));
+                List.of(new InventoryComponent.ReadableSlot(ResourceType.IRON_ORE, 5),
+                        new InventoryComponent.ReadableSlot(ResourceType.COAL, 2)))));
 
         Thread.sleep(6000);
 
@@ -66,7 +71,7 @@ class PrototypeChainTest {
                 .mapToInt(InventoryComponent.Slot::count)
                 .sum();
         System.out.println("[test] печь #" + furnace + " плиты: " + plates);
-        assertTrue(plates > 0, "в печи должны быть железные плиты");
+        assertTrue(plates == 5, "из 5 руды должно выйти ровно 5 плит, вышло " + plates);
     }
 
     @Test
@@ -128,5 +133,50 @@ class PrototypeChainTest {
         assertTrue(gameCommands.info("60:60").startsWith("FAIL"), "после сноса там пусто");
 
         System.out.println("[test] снесён сундук #" + chest + ": " + demolished);
+    }
+
+    @Test
+    @DisplayName("Подземка телепортирует через пустую клетку")
+    void undergroundTeleports() throws Exception {
+        long src = blueprints.createChest(50, 39, Tier.ONE);
+        cm.add(src, cfm.create(new InventoryComponent.Args(8, 100,
+                List.of(new InventoryComponent.ReadableSlot(ResourceType.COAL, 3)))));
+        blueprints.createUnderground(50, 40, Tier.ONE, 0,
+                ru.phyllosedis.textario.logistics.underground.UndergroundMode.ENTRY);
+        blueprints.createUnderground(50, 42, Tier.ONE, 0,
+                ru.phyllosedis.textario.logistics.underground.UndergroundMode.EXIT);
+        long dst = blueprints.createChest(50, 43, Tier.ONE);
+
+        Thread.sleep(5000);
+
+        InventoryComponent inv = cm.get(dst, InventoryComponent.class);
+        int coal = inv.getSlots().stream()
+                .filter(s -> ResourceType.UNDEFINED.getByOrdinal(s.resource()) == ResourceType.COAL)
+                .mapToInt(InventoryComponent.Slot::count)
+                .sum();
+        System.out.println("[test] сундук за подземкой #" + dst + " уголь: " + coal);
+        assertTrue(coal > 0, "уголь должен пройти сквозь подземку (50:41 пустая)");
+    }
+
+    @Test
+    @DisplayName("Сохранение и загрузка возвращают мир")
+    void saveAndLoad() throws Exception {
+        java.nio.file.Path file = java.nio.file.Files.createTempFile("textario-test-", ".json");
+        try {
+            blueprints.createChest(61, 61, Tier.ONE);
+            String saved = saves.save(file.toString());
+            assertTrue(saved.startsWith("OK"), "сохранение: " + saved);
+
+            String demolished = gameCommands.demolish("61:61");
+            assertTrue(demolished.startsWith("OK"), demolished);
+            assertTrue(gameCommands.entityAt(61, 61) == null);
+
+            String loaded = saves.load(file.toString());
+            assertTrue(loaded.startsWith("OK"), "загрузка: " + loaded);
+            assertTrue(gameCommands.entityAt(61, 61) != null, "сундук должен вернуться после загрузки");
+            System.out.println("[test] save/load: " + loaded);
+        } finally {
+            java.nio.file.Files.deleteIfExists(file);
+        }
     }
 }

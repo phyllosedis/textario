@@ -9,10 +9,14 @@ import ru.phyllosedis.textario.inventory.InventoryComponent;
 import ru.phyllosedis.textario.logistics.belt.BeltMarkerComponent;
 import ru.phyllosedis.textario.logistics.inserter.InserterMarkerComponent;
 import ru.phyllosedis.textario.logistics.splitter.SplitMode;
+import ru.phyllosedis.textario.logistics.underground.UndergroundMarkerComponent;
+import ru.phyllosedis.textario.logistics.underground.UndergroundMode;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
 import ru.phyllosedis.textario.production.assembler.AssemblerComponent;
 import ru.phyllosedis.textario.production.assembler.AssemblerMarkerComponent;
+import ru.phyllosedis.textario.production.mining.MiningMarkerComponent;
+import ru.phyllosedis.textario.production.recipe.RecipeBook;
 import ru.phyllosedis.textario.production.mining.MiningMarkerComponent;
 import ru.phyllosedis.textario.production.recipe.RecipeBook;
 import ru.phyllosedis.textario.resource.ResourceType;
@@ -84,7 +88,8 @@ public class GameCommands {
     }
 
     /**
-     * Повернуть ленту/руку на клетке на 90° по часовой.
+     * Повернуть ленту/руку/разделитель на клетке на 90° по часовой.
+     * У разделителя заодно меняется футпринт 2x1 <-> 1x2.
      */
     public String rotateAt(int x, int y) {
         Long id;
@@ -96,8 +101,14 @@ public class GameCommands {
         if (id == null) {
             return "FAIL: на " + x + ":" + y + " пусто";
         }
-        if (!cm.has(id, BeltMarkerComponent.class) && !cm.has(id, InserterMarkerComponent.class)) {
-            return "FAIL: #" + id + " не поворачивается (только лента и рука)";
+        if (!isRotatable(id)) {
+            return "FAIL: #" + id + " не поворачивается (лента, рука, разделитель)";
+        }
+        if (cm.has(id, ru.phyllosedis.textario.logistics.splitter.SplitterMarkerComponent.class)) {
+            String moved = moveFootprint(id);
+            if (moved != null) {
+                return "FAIL: " + moved;
+            }
         }
         RotationComponent current = cm.get(id, RotationComponent.class);
         int next = ((current == null ? 0 : current.getSteps()) + 1) % 4;
@@ -105,8 +116,46 @@ public class GameCommands {
         return "OK: #" + id + " теперь смотрит " + directionName(next);
     }
 
+    /**
+     * Меняет футпринт разделителя 2x1 <-> 1x2. Возвращает причину отказа или null.
+     */
+    private String moveFootprint(long id) {
+        PositionComponent pos = cm.get(id, PositionComponent.class);
+        BuildingComponent building = cm.get(id, BuildingComponent.class);
+        if (pos == null || building == null) {
+            return "нет позиции";
+        }
+        int newW = building.getHeight();
+        int newH = building.getWidth();
+        for (int cx = pos.getX(); cx < pos.getX() + newW; cx++) {
+            for (int cy = pos.getY(); cy < pos.getY() + newH; cy++) {
+                if (cx < 0 || cx >= occupancyGrid.getWidth() || cy < 0 || cy >= occupancyGrid.getHeight()) {
+                    return "нет места для поворота (граница карты)";
+                }
+                Long occ = occupancyGrid.getEntityAt(cx, cy);
+                if (occ != null && occ != id) {
+                    return "нет места для поворота (клетка " + cx + ":" + cy + " занята)";
+                }
+            }
+        }
+        for (int cx = pos.getX(); cx < pos.getX() + building.getWidth(); cx++) {
+            for (int cy = pos.getY(); cy < pos.getY() + building.getHeight(); cy++) {
+                occupancyGrid.freeCell(cx, cy);
+            }
+        }
+        for (int cx = pos.getX(); cx < pos.getX() + newW; cx++) {
+            for (int cy = pos.getY(); cy < pos.getY() + newH; cy++) {
+                occupancyGrid.occupyCell(cx, cy, id);
+            }
+        }
+        cm.add(id, cfm.create(new BuildingComponent.Args(newW, newH)));
+        return null;
+    }
+
     public boolean isRotatable(long id) {
-        return cm.has(id, BeltMarkerComponent.class) || cm.has(id, InserterMarkerComponent.class);
+        return cm.has(id, BeltMarkerComponent.class)
+                || cm.has(id, InserterMarkerComponent.class)
+                || cm.has(id, ru.phyllosedis.textario.logistics.splitter.SplitterMarkerComponent.class);
     }
 
     public Long entityAt(int x, int y) {
@@ -160,10 +209,21 @@ public class GameCommands {
             throw new IllegalArgumentException("на " + x + ":" + y + " пусто");
         }
         String kind = kindOf(id);
-        if (type != null && !type.isEmpty() && !type.equals(kind)) {
+        if (type != null && !type.isEmpty() && !canonical(type).equals(kind)) {
             throw new IllegalArgumentException("на " + x + ":" + y + " стоит " + kind + ", а не " + type);
         }
         return new ResolvedRef(id, x, y, kind);
+    }
+
+    private static String canonical(String type) {
+        return switch (type) {
+            case "ins" -> "inserter";
+            case "fur" -> "furnace";
+            case "spl" -> "splitter";
+            case "under" -> "underground";
+            case "asm" -> "assembler";
+            default -> type;
+        };
     }
 
     public String kindOf(long id) {
@@ -171,6 +231,7 @@ public class GameCommands {
         if (cm.has(id, BeltMarkerComponent.class)) return "belt";
         if (cm.has(id, InserterMarkerComponent.class)) return "inserter";
         if (cm.has(id, ru.phyllosedis.textario.logistics.splitter.SplitterMarkerComponent.class)) return "splitter";
+        if (cm.has(id, UndergroundMarkerComponent.class)) return "underground";
         if (cm.has(id, ChestMarkerComponent.class)) return "chest";
         if (cm.has(id, ru.phyllosedis.textario.production.furnace.FurnaceMarkerComponent.class)) return "furnace";
         if (cm.has(id, AssemblerMarkerComponent.class)) return "assembler";
@@ -181,7 +242,7 @@ public class GameCommands {
         try {
             ResolvedRef r = resolveRef(ref);
             return "#" + r.id() + " " + r.kind() + "@" + r.x() + ":" + r.y()
-                    + " — " + worldView.describe(r.x(), r.y());
+                    + " - " + worldView.describe(r.x(), r.y());
         } catch (Exception e) {
             return "FAIL: " + e.getMessage();
         }
@@ -194,8 +255,13 @@ public class GameCommands {
         } catch (Exception e) {
             return "FAIL: " + e.getMessage();
         }
-        PositionComponent pos = cm.get(r.id(), PositionComponent.class);
-        BuildingComponent building = cm.get(r.id(), BuildingComponent.class);
+        return demolishById(r.id());
+    }
+
+    public String demolishById(long id) {
+        String kind = kindOf(id);
+        PositionComponent pos = cm.get(id, PositionComponent.class);
+        BuildingComponent building = cm.get(id, BuildingComponent.class);
         if (pos != null && building != null) {
             for (int x = pos.getX(); x < pos.getX() + building.getWidth(); x++) {
                 for (int y = pos.getY(); y < pos.getY() + building.getHeight(); y++) {
@@ -203,15 +269,31 @@ public class GameCommands {
                 }
             }
         }
-        cm.removeEntity(r.id());
-        blueprints.forget(r.id());
-        return "OK: снесён " + r.kind() + " #" + r.id();
+        cm.removeEntity(id);
+        blueprints.forget(id);
+        return "OK: снесён " + kind + " #" + id;
     }
 
     public String placeAssembler(int x, int y) {
         return tryPlace(() -> {
             long id = blueprints.createAssembler(x, y, Tier.ONE);
             return "сборщик #" + id + " на " + x + ":" + y + " (рецепт: <ref> set <имя>)";
+        });
+    }
+
+    public String placeUnderground(int x, int y, int rotation, String modeWord) {
+        UndergroundMode mode;
+        try {
+            mode = UndergroundMode.valueOf(modeWord.toUpperCase());
+        } catch (Exception e) {
+            return "FAIL: режим должен быть entry или exit, получил '" + modeWord + "'";
+        }
+        if (mode == UndergroundMode.UNDEFINED) {
+            return "FAIL: режим должен быть entry или exit";
+        }
+        return tryPlace(() -> {
+            long id = blueprints.createUnderground(x, y, Tier.ONE, rotation, mode);
+            return "подземка #" + id + " (" + mode + ") на " + x + ":" + y;
         });
     }
 
@@ -247,6 +329,10 @@ public class GameCommands {
             sb.append("  ").append(formatRecipe(r)).append("\n");
         }
         sb.append("Выбор: assembler@x:y set <имя>");
+        sb.append("\nТОПЛИВО ПЕЧИ:\n");
+        for (java.util.Map.Entry<ResourceType, Integer> fuel : book.fuels().entrySet()) {
+            sb.append("  ").append(fuel.getKey()).append("x1 = ").append(fuel.getValue()).append(" плавки\n");
+        }
         return sb.toString();
     }
 
@@ -266,13 +352,14 @@ public class GameCommands {
     public String placeableText() {
         return """
                 РАЗМЕЩАЕМЫЕ:
-                  miner x y ORE — бур 2x2, ORE = IRON_ORE/COPPER_ORE/COAL, только на руду
-                  belt x y [dir] — лента 1x1
-                  ins x y [dir] — рука 1x1
-                  chest x y — сундук 1x1
-                  fur x y — печь 2x2 (плавит по рецептам из recipes)
-                  spl x y MODE — разделитель 2x1, MODE = ROUND_ROBIN/BALANCED/PRIORITY_LEFT/PRIORITY_RIGHT
-                  assembler x y — сборщик 2x2, рецепт: assembler@x:y set <имя>
+                  miner x y ORE - бур 2x2, ORE = IRON_ORE/COPPER_ORE/COAL, только на руду
+                  belt x y [dir] - лента 1x1
+                  ins x y [dir] - рука 1x1
+                  chest x y - сундук 1x1
+                  fur x y - печь 2x2 (плавит по рецептам из recipes, нужен уголь)
+                  spl x y MODE [dir] - разделитель 2x1, MODE = ROUND_ROBIN/BALANCED/PRIORITY_LEFT/PRIORITY_RIGHT
+                  assembler x y - сборщик 2x2, рецепт: assembler@x:y set <имя>
+                  under x y dir entry|exit - подземка 1x1, пара вход/выход, бросок до 4 клеток
                   dir = down/left/up/right (куда смотрит выход), по умолчанию down
                   удалить: delete <ref>, инфо: info <ref>, <ref> = x:y или тип@x:y""";
     }
@@ -286,8 +373,12 @@ public class GameCommands {
     }
 
     public String placeSplitter(int x, int y, SplitMode mode) {
+        return placeSplitter(x, y, mode, 0);
+    }
+
+    public String placeSplitter(int x, int y, SplitMode mode, int rotation) {
         return tryPlace(() -> {
-            long id = blueprints.createSplitter(x, y, Tier.ONE, ResourceType.EARTH, mode);
+            long id = blueprints.createSplitter(x, y, Tier.ONE, ResourceType.EARTH, mode, rotation);
             return "разделитель #" + id + " на " + x + ":" + y + " " + mode;
         });
     }

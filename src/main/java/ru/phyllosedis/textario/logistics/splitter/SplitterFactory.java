@@ -15,6 +15,9 @@ import ru.phyllosedis.textario.logistics.port.PortSide;
 import ru.phyllosedis.textario.logistics.port.PortType;
 import ru.phyllosedis.textario.resource.ContentState;
 
+import ru.phyllosedis.textario.resource.ContentState;
+import ru.phyllosedis.textario.world.RotationComponent;
+
 import java.util.List;
 
 @Component
@@ -35,6 +38,7 @@ public class SplitterFactory extends AbstractEntityFactory<SplitterFactory.Args>
         cm.add(id, cfm.create(new SplitterComponent.Args(args.getSplitMode())));
         cm.add(id, cfm.create(new ContentStateComponent.Args(ContentState.SOLID)));
         cm.add(id, cfm.create(new InventoryComponent.Args(2, 4, List.of())));
+        cm.add(id, cfm.create(new RotationComponent.Args(args.getRotation())));
         cm.add(id, cfm.create(new LogisticPort.Args(List.of(
                 new LogisticPort.ReadablePort(
                         0,
@@ -58,5 +62,6 @@ public class SplitterFactory extends AbstractEntityFactory<SplitterFactory.Args>
     @SuperBuilder
     public static class Args extends AbstractEntityFactory.Args {
         private final SplitMode splitMode;
+        private final int rotation;
     }
 }

@@ -45,8 +45,14 @@ public final class PortResolver {
         };
     }
 
-    private static int[] rotate(int dx, int dy, int rotation) {
-        return switch (((rotation % 4) + 4) % 4) {
+    /**
+     * Повернуть вектор смещения. Публичный для систем без портов (подземка).
+     */
+    public static int[] rotateVec(int dx, int dy, int rotation) {
+        return rotate(dx, dy, rotation);
+    }
+
+    private static int[] rotate(int dx, int dy, int rotation) {        return switch (((rotation % 4) + 4) % 4) {
             case 0 -> new int[]{dx, dy};
             case 1 -> new int[]{-dy, dx};
             case 2 -> new int[]{-dx, -dy};

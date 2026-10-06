@@ -6,6 +6,9 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 import ru.phyllosedis.textario.console.GameCommands;
 import ru.phyllosedis.textario.console.MapRenderer;
+import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
+import ru.phyllosedis.textario.engine.ecs.ComponentManager;
+import ru.phyllosedis.textario.inventory.InventoryComponent;
 import ru.phyllosedis.textario.engine.spring.EntityBlueprintService;
 import ru.phyllosedis.textario.logistics.splitter.SplitMode;
 import ru.phyllosedis.textario.resource.ResourceType;
@@ -18,6 +21,8 @@ public class GameInitializer implements CommandLineRunner {
 
     private final EntityBlueprintService entityBlueprintService;
     private final GameCommands gameCommands;
+    private final ComponentManager cm;
+    private final ComponentFactoryRegistry cfm;
     private final MapRenderer mapRenderer;
 
     @Override
@@ -35,6 +40,16 @@ public class GameInitializer implements CommandLineRunner {
         safe(() -> entityBlueprintService.createBelt(5, 24, Tier.ONE, ResourceType.EARTH, 0));
         safe(() -> entityBlueprintService.createInserter(5, 25, Tier.ONE, ResourceType.EARTH, 0));
         safe(() -> entityBlueprintService.createFurnace(5, 26, Tier.ONE));
+        // Стартовый уголь в печь, чтобы демо не встало без топлива
+        try {
+            Long furnace = gameCommands.entityAt(5, 26);
+            if (furnace != null) {
+                cm.add(furnace, cfm.create(new InventoryComponent.Args(4, 50,
+                        java.util.List.of(new InventoryComponent.ReadableSlot(ResourceType.COAL, 20)))));
+            }
+        } catch (Exception e) {
+            System.out.println("[init] без угля: " + e.getMessage());
+        }
         safe(() -> entityBlueprintService.createInserter(5, 28, Tier.ONE, ResourceType.EARTH, 0));
         safe(() -> entityBlueprintService.createChest(5, 29, Tier.ONE));
 

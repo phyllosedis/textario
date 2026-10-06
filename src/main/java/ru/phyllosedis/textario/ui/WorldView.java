@@ -8,9 +8,12 @@ import ru.phyllosedis.textario.inventory.InventoryComponent;
 import ru.phyllosedis.textario.logistics.port.LogisticPort;
 import ru.phyllosedis.textario.logistics.port.PortSide;
 import ru.phyllosedis.textario.logistics.port.PortType;
+import ru.phyllosedis.textario.logistics.underground.UndergroundComponent;
+import ru.phyllosedis.textario.logistics.underground.UndergroundMode;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
 import ru.phyllosedis.textario.production.assembler.AssemblerComponent;
+import ru.phyllosedis.textario.production.furnace.FuelComponent;
 import ru.phyllosedis.textario.production.recipe.RecipeBook;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
@@ -37,7 +40,7 @@ public class WorldView {
     private final RecipeBook book;
 
     public record Cell(int x, int y, String terrain, char glyph, boolean occupied,
-                         List<PortSide> inputs, List<PortSide> outputs) {
+                         List<PortSide> inputs, List<PortSide> outputs, String tag) {
     }
 
     public List<Cell> snapshot(int x0, int y0, int w, int h) {
@@ -57,11 +60,17 @@ public class WorldView {
                 }
                 List<PortSide> inputs = List.of();
                 List<PortSide> outputs = List.of();
+                String tag = "";
                 if (entityId != null) {
                     LogisticPort ports = cm.get(entityId, LogisticPort.class);
                     RotationComponent rotation = cm.get(entityId, RotationComponent.class);
                     int steps = rotation == null ? 0 : rotation.getSteps();
-                    if (ports != null) {
+                    UndergroundComponent underground = cm.get(entityId, UndergroundComponent.class);
+                    if (underground != null) {
+                        tag = UndergroundMode.UNDEFINED.getByOrdinal(underground.getMode()).name();
+                        inputs = List.of(PortResolver.rotateSide(PortSide.BACK, steps));
+                        outputs = List.of(PortResolver.rotateSide(PortSide.FRONT, steps));
+                    } else if (ports != null) {
                         inputs = ports.getPorts().stream()
                                 .filter(p -> PortType.UNDEFINED.getByOrdinal(p.type()) == PortType.INPUT)
                                 .map(p -> PortResolver.rotateSide(
@@ -74,7 +83,8 @@ public class WorldView {
                                 .toList();
                     }
                 }
-                cells.add(new Cell(x, y, terrain.name(), mapRenderer.glyphAt(x, y), entityId != null, inputs, outputs));
+                cells.add(new Cell(x, y, terrain.name(), mapRenderer.glyphAt(x, y),
+                        entityId != null, inputs, outputs, tag));
             }
         }
         return cells;
@@ -120,6 +130,10 @@ public class WorldView {
                     .map(r -> r.name() + " (" + r.id() + ")")
                     .orElse("рецепт не выбран");
             sb.append(" рецепт: ").append(recipe);
+        }
+        FuelComponent fuel = cm.get(entityId, FuelComponent.class);
+        if (fuel != null) {
+            sb.append(" топливо: ").append(fuel.getHeat());
         }
         InventoryComponent inv = cm.get(entityId, InventoryComponent.class);
         if (inv != null && !inv.getSlots().isEmpty()) {

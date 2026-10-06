@@ -40,6 +40,7 @@ public class FurnaceFactory extends AbstractEntityFactory<FurnaceFactory.Args> {
         cm.add(id, cfm.create(new ProduceSpeedComponent.Args(stats.getSpeed())));
         cm.add(id, cfm.create(new FurnaceMarkerComponent.Args()));
         cm.add(id, cfm.create(new FurnaceComponent.Args()));
+        cm.add(id, cfm.create(new FuelComponent.Args(0)));
         cm.add(id, cfm.create(new InventoryComponent.Args(4, 50, List.of())));
     }
 

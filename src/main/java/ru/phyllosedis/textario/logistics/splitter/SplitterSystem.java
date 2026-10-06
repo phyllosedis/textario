@@ -14,6 +14,11 @@ import ru.phyllosedis.textario.resource.ResourceType;
 import ru.phyllosedis.textario.resource.SystemOrder;
 import ru.phyllosedis.textario.world.BuildingComponent;
 import ru.phyllosedis.textario.world.OccupancyGrid;
+import ru.phyllosedis.textario.world.PortResolver;
+import ru.phyllosedis.textario.world.PositionComponent;
+import ru.phyllosedis.textario.world.RotationComponent;
+import ru.phyllosedis.textario.world.BuildingComponent;
+import ru.phyllosedis.textario.world.OccupancyGrid;
 import ru.phyllosedis.textario.world.PositionComponent;
 
 import java.util.ArrayList;
@@ -56,7 +61,7 @@ public class SplitterSystem extends AbstractSystem {
 
         InventoryComponent.Slot slot = buffer.getSlots().get(0);
         ResourceType type = ResourceType.UNDEFINED.getByOrdinal(slot.resource());
-        List<Long> outputs = outputEntities(position, building, ports);
+        List<Long> outputs = outputEntities(id, position, building, ports);
 
         Long target = switch (SplitMode.UNDEFINED.getByOrdinal(splitter.getSplitMode())) {
             case ROUND_ROBIN -> {
@@ -89,7 +94,7 @@ public class SplitterSystem extends AbstractSystem {
         if (input == null) {
             return;
         }
-        int[] pos = resolvePortPosition(position, building, input);
+        int[] pos = PortResolver.resolve(position, building, input, rotationOf(id));
         Long srcId = occupancyGrid.getEntityAt(pos[0], pos[1]);
         if (srcId == null || srcId == id) {
             return;
@@ -108,19 +113,25 @@ public class SplitterSystem extends AbstractSystem {
         addToInventory(id, cm.get(id, InventoryComponent.class), type, 1);
     }
 
-    private List<Long> outputEntities(PositionComponent position, BuildingComponent building, LogisticPort ports) {
+    private List<Long> outputEntities(long id, PositionComponent position, BuildingComponent building,
+                                        LogisticPort ports) {
         List<Long> result = new ArrayList<>();
         for (LogisticPort.Port port : ports.getPorts()) {
             if (PortType.UNDEFINED.getByOrdinal(port.type()) != PortType.OUTPUT) {
                 continue;
             }
-            int[] pos = resolvePortPosition(position, building, port);
+            int[] pos = PortResolver.resolve(position, building, port, rotationOf(id));
             Long entityId = occupancyGrid.getEntityAt(pos[0], pos[1]);
             if (entityId != null && cm.get(entityId, InventoryComponent.class) != null) {
                 result.add(entityId);
             }
         }
         return result;
+    }
+
+    private int rotationOf(long id) {
+        RotationComponent rotation = cm.get(id, RotationComponent.class);
+        return rotation == null ? 0 : rotation.getSteps();
     }
 
     private int freeSpace(long entityId, ResourceType type) {
