@@ -6,6 +6,7 @@ import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
 import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
+import ru.phyllosedis.textario.engine.metrics.MetricsService;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
 import ru.phyllosedis.textario.inventory.InventoryAccess;
 import ru.phyllosedis.textario.logistics.port.LogisticPort;
@@ -34,10 +35,13 @@ import java.util.List;
 public class InserterSystem extends AbstractSystem {
 
     private final OccupancyGrid occupancyGrid;
+    private final MetricsService metrics;
 
-    public InserterSystem(ComponentFactoryRegistry cfm, ComponentManager cm, OccupancyGrid occupancyGrid) {
+    public InserterSystem(ComponentFactoryRegistry cfm, ComponentManager cm, OccupancyGrid occupancyGrid,
+                          MetricsService metrics) {
         super(cfm, cm);
         this.occupancyGrid = occupancyGrid;
+        this.metrics = metrics;
     }
 
     @Override
@@ -153,6 +157,7 @@ public class InserterSystem extends AbstractSystem {
                 resourceType,
                 amount
         );
+        metrics.count("moved", resourceType, amount);
         return true;
     }
 

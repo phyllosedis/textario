@@ -6,6 +6,7 @@ import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
 import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
+import ru.phyllosedis.textario.engine.metrics.MetricsService;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
 import ru.phyllosedis.textario.inventory.InventoryAccess;
 import ru.phyllosedis.textario.resource.ResourceType;
@@ -27,10 +28,13 @@ public class UndergroundSystem extends AbstractSystem {
     public static final int MAX_DIST = 4;
 
     private final OccupancyGrid occupancyGrid;
+    private final MetricsService metrics;
 
-    public UndergroundSystem(ComponentFactoryRegistry cfm, ComponentManager cm, OccupancyGrid occupancyGrid) {
+    public UndergroundSystem(ComponentFactoryRegistry cfm, ComponentManager cm, OccupancyGrid occupancyGrid,
+                             MetricsService metrics) {
         super(cfm, cm);
         this.occupancyGrid = occupancyGrid;
+        this.metrics = metrics;
     }
 
     @Override
@@ -107,6 +111,7 @@ public class UndergroundSystem extends AbstractSystem {
             }
             takeFromBuffer(id, buf, slot, 1);
             addToInventory(exitId, cm.get(exitId, InventoryComponent.class), type, 1);
+            metrics.count("moved", type, 1);
             return;
         }
     }
@@ -134,6 +139,7 @@ public class UndergroundSystem extends AbstractSystem {
         }
         takeFromBuffer(id, buf, slot, 1);
         addToInventory(destId, cm.get(destId, InventoryComponent.class), type, 1);
+        metrics.count("moved", type, 1);
     }
 
     private int rotationOf(long id) {

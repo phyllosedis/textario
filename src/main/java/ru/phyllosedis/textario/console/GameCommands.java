@@ -1,9 +1,12 @@
 package ru.phyllosedis.textario.console;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
+import ru.phyllosedis.textario.engine.metrics.MetricsService;
+import ru.phyllosedis.textario.engine.events.EntityDemolishedEvent;
 import ru.phyllosedis.textario.engine.spring.EntityBlueprintService;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
 import ru.phyllosedis.textario.inventory.OutputInventoryComponent;
@@ -44,6 +47,8 @@ public class GameCommands {
     private final RecipeBook book;
     private final WorldView worldView;
     private final MapRenderer mapRenderer;
+    private final MetricsService metrics;
+    private final ApplicationEventPublisher publisher;
 
     public String placeMiner(int x, int y) {
         return tryPlace(() -> {
@@ -272,6 +277,7 @@ public class GameCommands {
         }
         cm.removeEntity(id);
         blueprints.forget(id);
+        publisher.publishEvent(new EntityDemolishedEvent(id, kind));
         return "OK: снесён " + kind + " #" + id;
     }
 
@@ -390,6 +396,10 @@ public class GameCommands {
 
     public String map(int x, int y, int w, int h) {
         return mapRenderer.render(x, y, w, h);
+    }
+
+    public String stats() {
+        return metrics.render();
     }
 
     public String inventories() {

@@ -20,6 +20,7 @@ public class CommandParser {
     private static final Map<String, String> USAGE = Map.ofEntries(
             Map.entry("map", "map [x y w h] - показать карту (по умолчанию 0 15 25 20)"),
             Map.entry("inv", "inv - показать склады, буферы и прогресс всех построек"),
+            Map.entry("stats", "stats - счётчики добычи/плавки/сборки и время тика по системам"),
             Map.entry("info", "info <ref> - что стоит на клетке: info 5:21, info belt@5:21"),
             Map.entry("delete", "delete <ref> - снести постройку (алиасы: del, remove, demolish)"),
             Map.entry("recipes", "recipes - все рецепты с указанием станции"),
@@ -61,6 +62,7 @@ public class CommandParser {
                                 argInt(parts, 3, "map"), argInt(parts, 4, "map"))
                         : commands.map();
                 case "inv" -> commands.inventories();
+                case "stats" -> commands.stats();
                 case "info" -> commands.info(joinFrom(need(parts, 2, "info"), 1));
                 case "delete", "del", "remove", "demolish" ->
                         commands.demolish(joinFrom(need(parts, 2, "delete"), 1));
@@ -99,7 +101,7 @@ public class CommandParser {
 
     private String index() {
         return """
-                команды: map inv info delete recipes placeable miner belt ins chest fur spl assembler under rot save load
+                команды: map inv stats info delete recipes placeable miner belt ins chest fur spl assembler under rot save load
                 подробно: help placeable | help recipes | help <команда> (например help spl)
                 <ref> - это x:y или тип@x:y, например belt@5:21
                 <ref> set <рецепт> - выбрать рецепт сборщика""";

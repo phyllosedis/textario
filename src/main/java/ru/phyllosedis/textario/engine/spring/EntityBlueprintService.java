@@ -1,7 +1,9 @@
 package ru.phyllosedis.textario.engine.spring;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import ru.phyllosedis.textario.engine.events.EntityBuiltEvent;
 import ru.phyllosedis.textario.logistics.belt.BeltFactory;
 import ru.phyllosedis.textario.logistics.inserter.InserterFactory;
 import ru.phyllosedis.textario.logistics.splitter.SplitMode;
@@ -29,6 +31,7 @@ public class EntityBlueprintService {
     private final PlacementService ps;
     private final OccupancyGrid occupancyGrid;
     private final EntityFactoryRegistry ef;
+    private final ApplicationEventPublisher publisher;
 
     private final AtomicLong idGenerator = new AtomicLong(0);
     private final Map<Long, String> createdEntities = new ConcurrentHashMap<>();
@@ -57,6 +60,8 @@ public class EntityBlueprintService {
 
     private void place(long id, Placement placement) {
         placements.put(id, placement);
+        publisher.publishEvent(new EntityBuiltEvent(
+                id, placement.kind(), placement.x(), placement.y()));
     }
 
     private void note(long id, String description) {

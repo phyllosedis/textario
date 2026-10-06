@@ -42,3 +42,8 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+### Textario ###
+target/
+logs/
+textario-save.json

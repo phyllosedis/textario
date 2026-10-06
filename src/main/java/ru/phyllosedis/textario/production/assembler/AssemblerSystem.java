@@ -2,10 +2,13 @@ package ru.phyllosedis.textario.production.assembler;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.context.ApplicationEventPublisher;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
 import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
+import ru.phyllosedis.textario.engine.events.ProducedEvent;
+import ru.phyllosedis.textario.engine.metrics.MetricsService;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
@@ -24,10 +27,15 @@ import java.util.Map;
 public class AssemblerSystem extends AbstractSystem {
 
     private final RecipeBook book;
+    private final MetricsService metrics;
+    private final ApplicationEventPublisher publisher;
 
-    public AssemblerSystem(ComponentFactoryRegistry cfm, ComponentManager cm, RecipeBook book) {
+    public AssemblerSystem(ComponentFactoryRegistry cfm, ComponentManager cm, RecipeBook book,
+                           MetricsService metrics, ApplicationEventPublisher publisher) {
         super(cfm, cm);
         this.book = book;
+        this.metrics = metrics;
+        this.publisher = publisher;
     }
 
     @Override
@@ -64,6 +72,10 @@ public class AssemblerSystem extends AbstractSystem {
                 output.getKey(), output.getValue() * crafts)));
         cm.add(id, cfm.create(new ProgressComponent.Args(0.0)));
         cm.remove(id, OperationFinishedMarkerComponent.class);
+
+        metrics.count("crafted", output.getKey(), output.getValue() * crafts);
+        publisher.publishEvent(new ProducedEvent(
+                id, "crafted", output.getKey(), output.getValue() * crafts));
     }
 
     private void idle(long id) {

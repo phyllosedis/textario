@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.phyllosedis.textario.bootstrap.TextarioApplication;
 import ru.phyllosedis.textario.console.GameCommands;
+import ru.phyllosedis.textario.engine.metrics.MetricsService;
 import ru.phyllosedis.textario.inventory.OutputInventoryComponent;
 import ru.phyllosedis.textario.world.SaveService;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
@@ -37,6 +38,9 @@ class PrototypeChainTest {
 
     @Autowired
     private SaveService saves;
+
+    @Autowired
+    private MetricsService metrics;
 
     @Test
     @DisplayName("Уголь доезжает из бура в сундук через манипулятор")
@@ -209,6 +213,16 @@ class PrototypeChainTest {
                 .sum();
         System.out.println("[test] за 2.5с рука перенесла угля: " + coal);
         assertTrue(coal >= 1 && coal <= 4, "рука 1 тира таскает ~1 шт/с, а не всё сразу, перенесено: " + coal);
+    }
+
+    @Test
+    @DisplayName("stats показывает тики и добычу без ожидания")
+    void statsSmoke() {
+        assertTrue(metrics.tickCount() > 0, "движок должен тикать");
+        String stats = gameCommands.stats();
+        assertTrue(stats.contains("ТИК #"), "stats должен показать счётчик тиков: " + stats);
+        assertTrue(metrics.get("mined", ResourceType.IRON_ORE) > 0, "демо-бур должен копать железо");
+        System.out.println("[test] stats:\n" + stats);
     }
 
     @Test

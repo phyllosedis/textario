@@ -1,10 +1,13 @@
 package ru.phyllosedis.textario.production.mining;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
 import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
+import ru.phyllosedis.textario.engine.events.ProducedEvent;
+import ru.phyllosedis.textario.engine.metrics.MetricsService;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
@@ -23,8 +26,14 @@ import ru.phyllosedis.textario.world.PositionComponent;
 @Slf4j
 public abstract class MiningResourceSystem extends AbstractSystem {
 
-    public MiningResourceSystem(ComponentFactoryRegistry cfm, ComponentManager cm) {
+    protected final MetricsService metrics;
+    protected final ApplicationEventPublisher publisher;
+
+    public MiningResourceSystem(ComponentFactoryRegistry cfm, ComponentManager cm,
+                                MetricsService metrics, ApplicationEventPublisher publisher) {
         super(cfm, cm);
+        this.metrics = metrics;
+        this.publisher = publisher;
     }
 
     @Override
@@ -41,6 +50,9 @@ public abstract class MiningResourceSystem extends AbstractSystem {
         cm.add(id, cfm.create(new DispatchedProductComponent.Args(resType, count)));
         cm.add(id, cfm.create(new ProgressComponent.Args(0.0)));
         cm.remove(id, OperationFinishedMarkerComponent.class);
+
+        metrics.count("mined", resType, count);
+        publisher.publishEvent(new ProducedEvent(id, "mined", resType, count));
 
         onComplete(id, resType, count);
     }
