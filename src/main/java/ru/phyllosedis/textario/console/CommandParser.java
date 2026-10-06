@@ -34,6 +34,10 @@ public class CommandParser {
             Map.entry("fur", "fur x y - печь 2x2 (нужны руда и уголь)"),
             Map.entry("spl", "spl x y MODE [dir] - разделитель; MODE: ROUND_ROBIN, BALANCED, PRIORITY_LEFT, PRIORITY_RIGHT"),
             Map.entry("assembler", "assembler x y - сборщик 2x2, дальше: assembler@x:y set <имя рецепта>"),
+            Map.entry("turret", "turret x y - турель 2x2, ест медные патроны из своего склада"),
+            Map.entry("core", "core x y - ядро 3x3, его жрут враги; без ядра волн нет (песочница)"),
+            Map.entry("spawn", "spawn x y - заспавнить врага (отладка)"),
+            Map.entry("wave", "wave - статус волн; wave go - запустить следующую волну сейчас"),
             Map.entry("under", "under x y dir entry|exit - подземка 1x1, пара вход/выход до 4 клеток"),
             Map.entry("rot", "rot x y - повернуть ленту/руку/разделитель на 90 градусов"),
             Map.entry("set", "<ref> set <рецепт> - например assembler@10:42 set iron-gear"),
@@ -86,6 +90,14 @@ public class CommandParser {
                 }
                 case "assembler" ->
                         commands.placeAssembler(argInt(parts, 1, "assembler"), argInt(parts, 2, "assembler"));
+                case "turret" ->
+                        commands.placeTurret(argInt(parts, 1, "turret"), argInt(parts, 2, "turret"));
+                case "core" ->
+                        commands.placeCore(argInt(parts, 1, "core"), argInt(parts, 2, "core"));
+                case "spawn" -> commands.spawnEnemy(joinFrom(need(parts, 2, "spawn"), 1));
+                case "wave" -> parts.length >= 2 && parts[1].equalsIgnoreCase("go")
+                        ? commands.forceWave()
+                        : commands.waveStatus();
                 case "under" -> {
                     need(parts, 5, "under");
                     yield commands.placeUnderground(argInt(parts, 1, "under"), argInt(parts, 2, "under"),
@@ -106,7 +118,7 @@ public class CommandParser {
 
     private String index() {
         return """
-                команды: map inv stats pause tick info delete recipes placeable miner belt ins chest fur spl assembler under rot save load
+                команды: map inv stats pause tick info delete recipes placeable miner belt ins chest fur spl assembler under turret core spawn wave rot save load
                 подробно: help placeable | help recipes | help <команда> (например help spl)
                 <ref> - это x:y или тип@x:y, например belt@5:21
                 <ref> set <рецепт> - выбрать рецепт сборщика""";

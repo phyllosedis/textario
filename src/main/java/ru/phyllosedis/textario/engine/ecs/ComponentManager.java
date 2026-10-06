@@ -59,6 +59,20 @@ public class ComponentManager {
         updateEntityInCache(id);
     }
 
+    /**
+     * Все сущности с компонентом (для поиска целей, ядра и т.п.).
+     * Линейный скан — вызывать редко, не в горячем цикле.
+     */
+    public java.util.Set<Long> entitiesWith(Class<? extends Component> componentClass) {
+        java.util.Set<Long> result = new java.util.HashSet<>();
+        for (Map.Entry<Long, Map<Class<? extends Component>, Component>> e : storage.entrySet()) {
+            if (e.getValue().containsKey(componentClass)) {
+                result.add(e.getKey());
+            }
+        }
+        return result;
+    }
+
     @SuppressWarnings("unchecked")
     public <T extends Component> T get(long id, Class<T> componentClass) {
         Map<Class<? extends Component>, Component> entityComponents = storage.get(id);

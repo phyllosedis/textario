@@ -9,6 +9,9 @@ import ru.phyllosedis.textario.logistics.splitter.SplitterMarkerComponent;
 import ru.phyllosedis.textario.production.furnace.FurnaceMarkerComponent;
 import ru.phyllosedis.textario.production.assembler.AssemblerMarkerComponent;
 import ru.phyllosedis.textario.logistics.underground.UndergroundMarkerComponent;
+import ru.phyllosedis.textario.combat.TurretMarkerComponent;
+import ru.phyllosedis.textario.combat.CoreMarkerComponent;
+import ru.phyllosedis.textario.combat.EnemyMarkerComponent;
 import ru.phyllosedis.textario.production.mining.MiningMarkerComponent;
 import ru.phyllosedis.textario.resource.ResourceType;
 import ru.phyllosedis.textario.storage.ChestMarkerComponent;
@@ -35,7 +38,7 @@ public class MapRenderer {
             }
             sb.append("\n");
         }
-        sb.append("M=бур B=лента I=рука S=разделитель C=сундук F=печь A=сборщик U=подземка | f=Fe c=Cu k=уголь .=земля\n");
+        sb.append("M=бур B=лента I=рука S=разделитель C=сундук F=печь A=сборщик U=подземка T=турель O=ядро E=враг | f=Fe c=Cu k=уголь .=земля\n");
         return sb.toString();
     }
 
@@ -58,6 +61,9 @@ public class MapRenderer {
             if (cm.has(entityId, FurnaceMarkerComponent.class)) return 'F';
             if (cm.has(entityId, AssemblerMarkerComponent.class)) return 'A';
             if (cm.has(entityId, UndergroundMarkerComponent.class)) return 'U';
+            if (cm.has(entityId, TurretMarkerComponent.class)) return 'T';
+            if (cm.has(entityId, CoreMarkerComponent.class)) return 'O';
+            if (cm.has(entityId, EnemyMarkerComponent.class)) return 'E';
             return '?';
         }
         ResourceType terrain;

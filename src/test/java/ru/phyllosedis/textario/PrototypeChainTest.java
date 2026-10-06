@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.phyllosedis.textario.bootstrap.TextarioApplication;
 import ru.phyllosedis.textario.console.GameCommands;
+import ru.phyllosedis.textario.combat.EnemyMarkerComponent;
 import ru.phyllosedis.textario.engine.metrics.MetricsService;
 import ru.phyllosedis.textario.inventory.OutputInventoryComponent;
 import ru.phyllosedis.textario.world.SaveService;
@@ -242,6 +243,31 @@ class PrototypeChainTest {
         } finally {
             gameCommands.resume();
         }
+    }
+
+    @Test
+    @DisplayName("Турель расстреливает врага")
+    void turretKillsEnemy() throws Exception {
+        long turret = blueprints.createTurret(65, 65, Tier.ONE);
+        cm.add(turret, cfm.create(new InventoryComponent.Args(2, 50,
+                List.of(new InventoryComponent.ReadableSlot(ResourceType.COPPER_AMMO, 8)))));
+        String spawned = gameCommands.spawnEnemy("67:65");
+        assertTrue(spawned.startsWith("OK"), spawned);
+
+        Thread.sleep(4000);
+
+        assertTrue(gameCommands.entityAt(67, 65) == null, "турель должна добить врага за 4с");
+        System.out.println("[test] турель #" + turret + " добила врага");
+    }
+
+    @Test
+    @DisplayName("Волна спавнится у ядра")
+    void waveSpawnsAtCore() {
+        blueprints.createCore(80, 80, Tier.ONE);
+        String forced = gameCommands.forceWave();
+        assertTrue(forced.startsWith("OK"), forced);
+        assertTrue(!cm.entitiesWith(EnemyMarkerComponent.class).isEmpty(), "волна должна заспавнить врагов");
+        System.out.println("[test] " + forced + ", статус: " + gameCommands.waveStatus());
     }
 
     @Test

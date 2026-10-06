@@ -15,6 +15,7 @@ import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
 import ru.phyllosedis.textario.production.assembler.AssemblerComponent;
 import ru.phyllosedis.textario.production.furnace.FuelComponent;
+import ru.phyllosedis.textario.combat.HealthComponent;
 import ru.phyllosedis.textario.production.recipe.RecipeBook;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
@@ -120,6 +121,10 @@ public class WorldView {
             return sb.toString();
         }
         sb.append(" | ").append(mapRenderer.glyphAt(x, y)).append(" #").append(entityId);
+        HealthComponent health = cm.get(entityId, HealthComponent.class);
+        if (health != null) {
+            sb.append(" hp ").append(health.getHp()).append("/").append(health.getMaxHp());
+        }
         RotationComponent rotation = cm.get(entityId, RotationComponent.class);
         if (rotation != null) {
             sb.append(" смотрит ").append(PortResolver.directionName(rotation.getSteps()));

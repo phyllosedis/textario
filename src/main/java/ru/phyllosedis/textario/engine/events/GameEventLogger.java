@@ -28,4 +28,9 @@ public class GameEventLogger {
     public void onProduced(ProducedEvent event) {
         log.debug("станция #{}: {} {} x{}", event.entityId(), event.what(), event.type(), event.count());
     }
+
+    @EventListener
+    public void onGameOver(GameOverEvent event) {
+        log.warn("ЯДРО #{} УНИЧТОЖЕНО на волне {}. Мир на паузе — load чтобы продолжить.", event.coreId(), event.wave());
+    }
 }

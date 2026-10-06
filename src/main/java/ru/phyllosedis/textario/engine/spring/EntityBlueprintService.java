@@ -10,6 +10,9 @@ import ru.phyllosedis.textario.logistics.splitter.SplitMode;
 import ru.phyllosedis.textario.logistics.splitter.SplitterFactory;
 import ru.phyllosedis.textario.logistics.underground.UndergroundFactory;
 import ru.phyllosedis.textario.logistics.underground.UndergroundMode;
+import ru.phyllosedis.textario.combat.CoreFactory;
+import ru.phyllosedis.textario.combat.EnemyFactory;
+import ru.phyllosedis.textario.combat.TurretFactory;
 import ru.phyllosedis.textario.production.assembler.AssemblerFactory;
 import ru.phyllosedis.textario.production.furnace.FurnaceFactory;
 import ru.phyllosedis.textario.production.mining.MinerFactory;
@@ -206,7 +209,8 @@ public class EntityBlueprintService {
         return id;
     }
 
-    public long createChest(int x, int y, Tier tier) {        long id = prepareEntity(x, y, 1, 1, ResourceCategory.SOIL);
+    public long createChest(int x, int y, Tier tier) {
+        long id = prepareEntity(x, y, 1, 1, ResourceCategory.SOIL);
         ef.get(ChestFactory.class).create(ChestFactory.Args.builder()
                 .id(id)
                 .tier(tier)
@@ -247,6 +251,63 @@ public class EntityBlueprintService {
                 .build());
         note(id, "assembler@" + x + ":" + y);
         place(id, new Placement("assembler", x, y, tier, ""));
+        return id;
+    }
+
+    public long createTurret(int x, int y, Tier tier) {
+        long id = prepareEntity(x, y, 2, 2, ResourceCategory.SOIL);
+        ef.get(TurretFactory.class).create(TurretFactory.Args.builder()
+                .id(id)
+                .tier(tier)
+                .x(x)
+                .y(y)
+                .width(2)
+                .height(2)
+                .build());
+        note(id, "turret@" + x + ":" + y);
+        place(id, new Placement("turret", x, y, tier, ""));
+        return id;
+    }
+
+    public long createCore(int x, int y, Tier tier) {
+        long id = prepareEntity(x, y, 3, 3, ResourceCategory.SOIL);
+        ef.get(CoreFactory.class).create(CoreFactory.Args.builder()
+                .id(id)
+                .tier(tier)
+                .x(x)
+                .y(y)
+                .width(3)
+                .height(3)
+                .build());
+        note(id, "core@" + x + ":" + y);
+        place(id, new Placement("core", x, y, tier, ""));
+        return id;
+    }
+
+    /**
+     * Спавн врага волны: характеристики растут с номером волны.
+     */
+    public long spawnEnemy(int x, int y, int wave) {
+        long id = idGenerator.incrementAndGet();
+        if (x < 0 || x >= occupancyGrid.getWidth() || y < 0 || y >= occupancyGrid.getHeight()) {
+            throw new IllegalArgumentException("вне карты: " + x + ":" + y);
+        }
+        if (occupancyGrid.isCellOccupied(x, y)) {
+            throw new IllegalArgumentException("клетка " + x + ":" + y + " занята");
+        }
+        occupancyGrid.occupyCell(x, y, id);
+        int hp = 10 + wave * 6;
+        int damage = 1 + wave / 2;
+        ef.get(EnemyFactory.class).create(EnemyFactory.Args.builder()
+                .id(id)
+                .x(x)
+                .y(y)
+                .width(1)
+                .height(1)
+                .hp(hp)
+                .damage(damage)
+                .speed(2.0)
+                .build());
         return id;
     }
 }

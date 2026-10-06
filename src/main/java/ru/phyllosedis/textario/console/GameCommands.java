@@ -8,6 +8,7 @@ import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.loop.Engine;
 import ru.phyllosedis.textario.engine.loop.TickGate;
 import ru.phyllosedis.textario.engine.metrics.MetricsService;
+import ru.phyllosedis.textario.combat.WaveService;
 import ru.phyllosedis.textario.engine.events.EntityDemolishedEvent;
 import ru.phyllosedis.textario.engine.spring.EntityBlueprintService;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
@@ -52,6 +53,7 @@ public class GameCommands {
     private final MetricsService metrics;
     private final TickGate tickGate;
     private final Engine engine;
+    private final WaveService waves;
     private final ApplicationEventPublisher publisher;
 
     public String placeMiner(int x, int y) {
@@ -245,6 +247,9 @@ public class GameCommands {
         if (cm.has(id, ChestMarkerComponent.class)) return "chest";
         if (cm.has(id, ru.phyllosedis.textario.production.furnace.FurnaceMarkerComponent.class)) return "furnace";
         if (cm.has(id, AssemblerMarkerComponent.class)) return "assembler";
+        if (cm.has(id, ru.phyllosedis.textario.combat.TurretMarkerComponent.class)) return "turret";
+        if (cm.has(id, ru.phyllosedis.textario.combat.CoreMarkerComponent.class)) return "core";
+        if (cm.has(id, ru.phyllosedis.textario.combat.EnemyMarkerComponent.class)) return "enemy";
         return "unknown";
     }
 
@@ -290,6 +295,48 @@ public class GameCommands {
             long id = blueprints.createAssembler(x, y, Tier.ONE);
             return "сборщик #" + id + " на " + x + ":" + y + " (рецепт: <ref> set <имя>)";
         });
+    }
+
+    public String placeTurret(int x, int y) {
+        return tryPlace(() -> {
+            long id = blueprints.createTurret(x, y, Tier.ONE);
+            return "турель #" + id + " на " + x + ":" + y + " (нужны медные патроны)";
+        });
+    }
+
+    public String placeCore(int x, int y) {
+        return tryPlace(() -> {
+            long id = blueprints.createCore(x, y, Tier.ONE);
+            return "ядро #" + id + " на " + x + ":" + y + " (держится " + waves.status() + ")";
+        });
+    }
+
+    public String spawnEnemy(String ref) {
+        final int x;
+        final int y;
+        try {
+            String[] xy = ref.trim().split("[:,]");
+            if (xy.length != 2) {
+                throw new IllegalArgumentException("нужны координаты вида x:y");
+            }
+            x = Integer.parseInt(xy[0].trim());
+            y = Integer.parseInt(xy[1].trim());
+        } catch (Exception e) {
+            return "FAIL: " + e.getMessage();
+        }
+        return tryPlace(() -> {
+            long id = blueprints.spawnEnemy(x, y, Math.max(1, waves.currentWave()));
+            return "враг #" + id + " на " + x + ":" + y;
+        });
+    }
+
+    public String waveStatus() {
+        return waves.status();
+    }
+
+    public String forceWave() {
+        waves.forceWave();
+        return "OK: волна " + waves.currentWave() + " пошла";
     }
 
     public String placeUnderground(int x, int y, int rotation, String modeWord) {
@@ -371,6 +418,8 @@ public class GameCommands {
                   spl x y MODE [dir] - разделитель 2x1, MODE = ROUND_ROBIN/BALANCED/PRIORITY_LEFT/PRIORITY_RIGHT
                   assembler x y - сборщик 2x2, рецепт: assembler@x:y set <имя>
                   under x y dir entry|exit - подземка 1x1, пара вход/выход, бросок до 4 клеток
+                  turret x y - турель 2x2 (нужны медные патроны, рецепт copper-ammo)
+                  core x y - ядро 3x3, его идут жрать волны; без ядра волн нет
                   dir = down/left/up/right (куда смотрит выход), по умолчанию down
                   удалить: delete <ref>, инфо: info <ref>, <ref> = x:y или тип@x:y""";
     }

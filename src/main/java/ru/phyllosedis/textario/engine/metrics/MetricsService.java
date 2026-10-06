@@ -27,7 +27,14 @@ public class MetricsService {
         if (n <= 0) {
             return;
         }
-        counters.computeIfAbsent(metric + ":" + type.name(), k -> new AtomicLong()).addAndGet(n);
+        countRaw(metric + ":" + type.name(), n);
+    }
+
+    public void countRaw(String key, long n) {
+        if (n <= 0) {
+            return;
+        }
+        counters.computeIfAbsent(key, k -> new AtomicLong()).addAndGet(n);
     }
 
     public long nextTick() {
@@ -63,6 +70,7 @@ public class MetricsService {
         renderGroup(sb, "smelted", "ВЫПЛАВЛЕНО", elapsedMin);
         renderGroup(sb, "crafted", "СОБРАНО", elapsedMin);
         renderGroup(sb, "moved", "ПЕРЕНЕСЕНО", elapsedMin);
+        renderGroup(sb, "kills", "УБИТО", elapsedMin);
         return sb.toString();
     }
 

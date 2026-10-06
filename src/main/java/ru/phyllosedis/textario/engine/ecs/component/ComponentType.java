@@ -24,6 +24,10 @@ public enum ComponentType implements Type<ComponentType> {
     ROTATION,
     ASSEMBLER,
     FUEL,
+    HEALTH,
+    ENEMY,
+    TURRET,
+    CORE,
     UNDEFINED;
 
     @Override

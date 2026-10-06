@@ -55,15 +55,18 @@ public class TextarioFxApp extends Application {
             "UNDEFINED", Color.web("#111111")
     );
 
-    private static final Map<Character, Color> ENTITY = Map.of(
-            'M', Color.web("#e0a030"),
-            'B', Color.web("#e0d030"),
-            'I', Color.web("#30a0e0"),
-            'S', Color.web("#a030e0"),
-            'C', Color.web("#c08040"),
-            'F', Color.web("#e04030"),
-            'A', Color.web("#30c060"),
-            'U', Color.web("#707070")
+    private static final Map<Character, Color> ENTITY = Map.ofEntries(
+            Map.entry('M', Color.web("#e0a030")),
+            Map.entry('B', Color.web("#e0d030")),
+            Map.entry('I', Color.web("#30a0e0")),
+            Map.entry('S', Color.web("#a030e0")),
+            Map.entry('C', Color.web("#c08040")),
+            Map.entry('F', Color.web("#e04030")),
+            Map.entry('A', Color.web("#30c060")),
+            Map.entry('U', Color.web("#707070")),
+            Map.entry('T', Color.web("#ff7043")),
+            Map.entry('O', Color.web("#b040f0")),
+            Map.entry('E', Color.web("#ff2020"))
     );
 
     private WorldView worldView;
@@ -264,6 +267,8 @@ public class TextarioFxApp extends Application {
         menu.getItems().add(buildItem("Сундук", () -> commands.placeChest(x, y)));
         menu.getItems().add(buildItem("Печь", () -> commands.placeFurnace(x, y)));
         menu.getItems().add(buildItem("Сборщик", () -> commands.placeAssembler(x, y)));
+        menu.getItems().add(buildItem("Турель", () -> commands.placeTurret(x, y)));
+        menu.getItems().add(buildItem("Ядро", () -> commands.placeCore(x, y)));
         menu.getItems().add(dirMenu("Разделитель",
                 (xx, yy, rot) -> commands.placeSplitter(xx, yy, SplitMode.ROUND_ROBIN, rot), x, y));
         javafx.scene.control.Menu under = new javafx.scene.control.Menu("Подземка");
@@ -438,8 +443,7 @@ public class TextarioFxApp extends Application {
                 g.strokeOval(cx - s * 0.22, cy - s * 0.22, s * 0.44, s * 0.44);
                 g.fillOval(cx - s * 0.08, cy - s * 0.08, s * 0.16, s * 0.16);
             }
-            case 'U' -> {
-                // Подземка: тёмный зев + стрелка (вход — внутрь, выход — наружу)
+            case 'U' -> {                // Подземка: тёмный зев + стрелка (вход — внутрь, выход — наружу)
                 g.setLineWidth(Math.max(1.5, s * 0.08));
                 g.strokeOval(cx - s * 0.24, cy - s * 0.24, s * 0.48, s * 0.48);
                 g.fillOval(cx - s * 0.17, cy - s * 0.17, s * 0.34, s * 0.34);
@@ -459,6 +463,29 @@ public class TextarioFxApp extends Application {
                     g.strokeLine(cx - dir[0] * s * 0.1, cy - dir[1] * s * 0.1, edge[0], edge[1]);
                     drawHead(g, edge, dir, Math.max(4, s * 0.18), true);
                 }
+            }
+            case 'T' -> {
+                // Турель: зубчатая стена + ствол вверх
+                g.setLineWidth(Math.max(1.5, s * 0.07));
+                g.strokeRect(cx - s * 0.3, cy - s * 0.1, s * 0.6, s * 0.42);
+                for (int i = 0; i < 3; i++) {
+                    double bx = cx - s * 0.3 + i * s * 0.22;
+                    g.strokeRect(bx, cy - s * 0.24, s * 0.14, s * 0.14);
+                }
+                g.setLineWidth(Math.max(2, s * 0.12));
+                g.strokeLine(cx, cy + s * 0.1, cx, cy - s * 0.24);
+            }
+            case 'O' -> {
+                // Ядро: двойной квадрат
+                g.setLineWidth(Math.max(2, s * 0.09));
+                g.strokeRect(cx - s * 0.32, cy - s * 0.32, s * 0.64, s * 0.64);
+                g.fillRect(cx - s * 0.12, cy - s * 0.12, s * 0.24, s * 0.24);
+            }
+            case 'E' -> {
+                // Враг: крест
+                g.setLineWidth(Math.max(2, s * 0.12));
+                g.strokeLine(cx - s * 0.24, cy - s * 0.24, cx + s * 0.24, cy + s * 0.24);
+                g.strokeLine(cx - s * 0.24, cy + s * 0.24, cx + s * 0.24, cy - s * 0.24);
             }
             default -> {
                 g.setFont(Font.font("Monospaced", Math.max(8, s * 0.5)));

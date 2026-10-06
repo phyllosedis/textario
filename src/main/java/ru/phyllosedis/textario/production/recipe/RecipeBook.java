@@ -37,7 +37,9 @@ public class RecipeBook {
             new Recipe("iron-gear", "шестерёнки", Station.ASSEMBLER,
                     Map.of(ResourceType.IRON_PLATE, 2), Map.of(ResourceType.IRON_GEAR, 1)),
             new Recipe("copper-cable", "медный кабель", Station.ASSEMBLER,
-                    Map.of(ResourceType.COPPER_PLATE, 1), Map.of(ResourceType.COPPER_CABLE, 2))
+                    Map.of(ResourceType.COPPER_PLATE, 1), Map.of(ResourceType.COPPER_CABLE, 2)),
+            new Recipe("copper-ammo", "медные патроны", Station.ASSEMBLER,
+                    Map.of(ResourceType.COPPER_PLATE, 1), Map.of(ResourceType.COPPER_AMMO, 2))
     );
 
     public List<Recipe> all() {

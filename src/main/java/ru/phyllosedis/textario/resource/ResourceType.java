@@ -50,6 +50,11 @@ public enum ResourceType implements Type<ResourceType> {
             ResourceCategory.ORE
     ),
 
+    COPPER_AMMO(
+            ContentState.SOLID,
+            ResourceCategory.ORE
+    ),
+
     EARTH(
             ContentState.SOLID,
             ResourceCategory.SOIL

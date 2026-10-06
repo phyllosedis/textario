@@ -106,6 +106,8 @@ public class SaveService {
                 }
                 case "underground" -> blueprints.createUnderground(
                         s.x(), s.y(), tier, s.rotation(), UndergroundMode.valueOf(s.extra()));
+                case "turret" -> blueprints.createTurret(s.x(), s.y(), tier);
+                case "core" -> blueprints.createCore(s.x(), s.y(), tier);
                 default -> {
                     return "неизвестный вид '" + s.kind() + "'";
                 }

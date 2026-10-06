@@ -7,7 +7,10 @@ public final class SystemOrder {
     public static final int ASSEMBLER = 13;
     public static final int INVENTORY = 15;
     public static final int INSERTER = 20;
+    public static final int ENEMY = 25;
+    public static final int TURRET = 26;
     public static final int BELT = 30;
+    public static final int CORE = 40;
 
     public SystemOrder() {
 

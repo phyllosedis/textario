@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import ru.phyllosedis.textario.engine.ecs.system.System;
 import ru.phyllosedis.textario.engine.metrics.MetricsService;
+import ru.phyllosedis.textario.combat.WaveService;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ public class Engine {
     private final List<System> systems;
     private final TickGate tickGate;
     private final MetricsService metrics;
+    private final WaveService waves;
 
     @Scheduled(fixedRateString = "${textario.tick-rate-ms}")
     public void gameTick() {
@@ -54,6 +56,7 @@ public class Engine {
                 timings.put(system.getClass().getSimpleName(),
                         java.lang.System.nanoTime() - systemStart);
             }
+            waves.tick();
             metrics.tickDone(timings, java.lang.System.nanoTime() - start);
         } finally {
             MDC.remove("tick");
