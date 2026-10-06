@@ -25,6 +25,19 @@ public class Engine {
         if (tickGate.isPaused()) {
             return;
         }
+        doTick();
+    }
+
+    /**
+     * Ручная прокрутка для команды tick: работает и на паузе.
+     */
+    public void step(int n) {
+        for (int i = 0; i < n; i++) {
+            doTick();
+        }
+    }
+
+    private void doTick() {
         long tickNo = metrics.nextTick();
         MDC.put("tick", String.valueOf(tickNo));
         try {

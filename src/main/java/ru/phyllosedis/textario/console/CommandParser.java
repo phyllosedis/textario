@@ -21,6 +21,8 @@ public class CommandParser {
             Map.entry("map", "map [x y w h] - показать карту (по умолчанию 0 15 25 20)"),
             Map.entry("inv", "inv - показать склады, буферы и прогресс всех построек"),
             Map.entry("stats", "stats - счётчики добычи/плавки/сборки и время тика по системам"),
+            Map.entry("pause", "pause - вкл/выкл паузу (строить удобно на паузе)"),
+            Map.entry("tick", "tick N - прокрутить N тиков вручную, работает и на паузе"),
             Map.entry("info", "info <ref> - что стоит на клетке: info 5:21, info belt@5:21"),
             Map.entry("delete", "delete <ref> - снести постройку (алиасы: del, remove, demolish)"),
             Map.entry("recipes", "recipes - все рецепты с указанием станции"),
@@ -63,6 +65,9 @@ public class CommandParser {
                         : commands.map();
                 case "inv" -> commands.inventories();
                 case "stats" -> commands.stats();
+                case "pause" -> commands.togglePause();
+                case "resume" -> commands.resume();
+                case "tick" -> commands.stepTicks(argInt(parts, 1, "tick"));
                 case "info" -> commands.info(joinFrom(need(parts, 2, "info"), 1));
                 case "delete", "del", "remove", "demolish" ->
                         commands.demolish(joinFrom(need(parts, 2, "delete"), 1));
@@ -101,7 +106,7 @@ public class CommandParser {
 
     private String index() {
         return """
-                команды: map inv stats info delete recipes placeable miner belt ins chest fur spl assembler under rot save load
+                команды: map inv stats pause tick info delete recipes placeable miner belt ins chest fur spl assembler under rot save load
                 подробно: help placeable | help recipes | help <команда> (например help spl)
                 <ref> - это x:y или тип@x:y, например belt@5:21
                 <ref> set <рецепт> - выбрать рецепт сборщика""";

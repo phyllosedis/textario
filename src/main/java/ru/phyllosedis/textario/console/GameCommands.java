@@ -5,6 +5,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
+import ru.phyllosedis.textario.engine.loop.Engine;
+import ru.phyllosedis.textario.engine.loop.TickGate;
 import ru.phyllosedis.textario.engine.metrics.MetricsService;
 import ru.phyllosedis.textario.engine.events.EntityDemolishedEvent;
 import ru.phyllosedis.textario.engine.spring.EntityBlueprintService;
@@ -48,6 +50,8 @@ public class GameCommands {
     private final WorldView worldView;
     private final MapRenderer mapRenderer;
     private final MetricsService metrics;
+    private final TickGate tickGate;
+    private final Engine engine;
     private final ApplicationEventPublisher publisher;
 
     public String placeMiner(int x, int y) {
@@ -400,6 +404,25 @@ public class GameCommands {
 
     public String stats() {
         return metrics.render();
+    }
+
+    public String togglePause() {
+        boolean now = !tickGate.isPaused();
+        tickGate.setPaused(now);
+        return now ? "OK: пауза включена (мир стоит, строй спокойно)" : "OK: пауза выключена (мир тикает)";
+    }
+
+    public String resume() {
+        tickGate.setPaused(false);
+        return "OK: пауза выключена (мир тикает)";
+    }
+
+    public String stepTicks(int n) {
+        if (n <= 0 || n > 100000) {
+            return "FAIL: tick 1..100000";
+        }
+        engine.step(n);
+        return "OK: прошло тиков: " + n + " (всего #" + metrics.tickCount() + ")";
     }
 
     public String inventories() {

@@ -18,6 +18,7 @@ import ru.phyllosedis.textario.resource.Tier;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = TextarioApplication.class, properties = "textario.console.enabled=false")
@@ -223,6 +224,24 @@ class PrototypeChainTest {
         assertTrue(stats.contains("ТИК #"), "stats должен показать счётчик тиков: " + stats);
         assertTrue(metrics.get("mined", ResourceType.IRON_ORE) > 0, "демо-бур должен копать железо");
         System.out.println("[test] stats:\n" + stats);
+    }
+
+    @Test
+    @DisplayName("Пауза останавливает тики, tick крутит вручную")
+    void pauseAndStep() throws Exception {
+        try {
+            gameCommands.togglePause();
+            long t1 = metrics.tickCount();
+            Thread.sleep(300);
+            long t2 = metrics.tickCount();
+            assertTrue(t2 - t1 <= 2, "на паузе тики стоять, сдвиг " + (t2 - t1));
+
+            String stepped = gameCommands.stepTicks(5);
+            assertTrue(stepped.startsWith("OK"), stepped);
+            assertEquals(t2 + 5, metrics.tickCount(), "tick 5 крутит ровно 5 тиков");
+        } finally {
+            gameCommands.resume();
+        }
     }
 
     @Test
