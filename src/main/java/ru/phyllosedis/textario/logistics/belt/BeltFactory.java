@@ -16,6 +16,7 @@ import ru.phyllosedis.textario.logistics.port.PortType;
 import ru.phyllosedis.textario.production.ProduceSpeedComponent;
 import ru.phyllosedis.textario.resource.ContentState;
 import ru.phyllosedis.textario.resource.marker.SolidStateMarkerComponent;
+import ru.phyllosedis.textario.world.RotationComponent;
 
 import java.util.List;
 
@@ -39,6 +40,7 @@ public class BeltFactory extends AbstractEntityFactory<BeltFactory.Args> {
         cm.add(id, cfm.create(new ProduceSpeedComponent.Args(stats.getSpeed())));
         cm.add(id, cfm.create(new ContentStateComponent.Args(ContentState.SOLID)));
         cm.add(id, cfm.create(new InventoryComponent.Args(1, 4, List.of())));
+        cm.add(id, cfm.create(new RotationComponent.Args(args.getRotation())));
         cm.add(id, cfm.create(new LogisticPort.Args(List.of(
                 new LogisticPort.ReadablePort(
                         0,
@@ -56,5 +58,6 @@ public class BeltFactory extends AbstractEntityFactory<BeltFactory.Args> {
     @Getter
     @SuperBuilder
     public static class Args extends AbstractEntityFactory.Args {
+        private final int rotation;
     }
 }

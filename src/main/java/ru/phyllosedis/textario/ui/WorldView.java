@@ -12,6 +12,8 @@ import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
 import ru.phyllosedis.textario.resource.ResourceType;
 import ru.phyllosedis.textario.world.OccupancyGrid;
+import ru.phyllosedis.textario.world.PortResolver;
+import ru.phyllosedis.textario.world.RotationComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,14 +54,18 @@ public class WorldView {
                 List<PortSide> outputs = List.of();
                 if (entityId != null) {
                     LogisticPort ports = cm.get(entityId, LogisticPort.class);
+                    RotationComponent rotation = cm.get(entityId, RotationComponent.class);
+                    int steps = rotation == null ? 0 : rotation.getSteps();
                     if (ports != null) {
                         inputs = ports.getPorts().stream()
                                 .filter(p -> PortType.UNDEFINED.getByOrdinal(p.type()) == PortType.INPUT)
-                                .map(p -> PortSide.UNDEFINED.getByOrdinal(p.side()))
+                                .map(p -> PortResolver.rotateSide(
+                                        PortSide.UNDEFINED.getByOrdinal(p.side()), steps))
                                 .toList();
                         outputs = ports.getPorts().stream()
                                 .filter(p -> PortType.UNDEFINED.getByOrdinal(p.type()) == PortType.OUTPUT)
-                                .map(p -> PortSide.UNDEFINED.getByOrdinal(p.side()))
+                                .map(p -> PortResolver.rotateSide(
+                                        PortSide.UNDEFINED.getByOrdinal(p.side()), steps))
                                 .toList();
                     }
                 }

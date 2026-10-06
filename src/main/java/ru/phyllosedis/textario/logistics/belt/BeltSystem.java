@@ -14,7 +14,9 @@ import ru.phyllosedis.textario.resource.ResourceType;
 import ru.phyllosedis.textario.resource.SystemOrder;
 import ru.phyllosedis.textario.world.BuildingComponent;
 import ru.phyllosedis.textario.world.OccupancyGrid;
+import ru.phyllosedis.textario.world.PortResolver;
 import ru.phyllosedis.textario.world.PositionComponent;
+import ru.phyllosedis.textario.world.RotationComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +59,8 @@ public class BeltSystem extends AbstractSystem {
         if (slot.count() <= 0) {
             return;
         }
-        int[] front = resolvePortPosition(position, building, findPort(ports, PortType.OUTPUT));
+        int[] front = PortResolver.resolve(position, building,
+                findPort(ports, PortType.OUTPUT), rotationOf(id));
         Long destId = occupancyGrid.getEntityAt(front[0], front[1]);
         if (destId == null || destId == id) {
             return;
@@ -82,7 +85,8 @@ public class BeltSystem extends AbstractSystem {
         }
         ResourceType carried = beltInv.getSlots().isEmpty() ? null
                 : ResourceType.UNDEFINED.getByOrdinal(beltInv.getSlots().get(0).resource());
-        int[] back = resolvePortPosition(position, building, findPort(ports, PortType.INPUT));
+        int[] back = PortResolver.resolve(position, building,
+                findPort(ports, PortType.INPUT), rotationOf(id));
         Long srcId = occupancyGrid.getEntityAt(back[0], back[1]);
         if (srcId == null || srcId == id) {
             return;
@@ -168,23 +172,15 @@ public class BeltSystem extends AbstractSystem {
                         .toList())));
     }
 
+    private int rotationOf(long id) {
+        RotationComponent rotation = cm.get(id, RotationComponent.class);
+        return rotation == null ? 0 : rotation.getSteps();
+    }
+
     private LogisticPort.Port findPort(LogisticPort ports, PortType type) {
         return ports.getPorts().stream()
                 .filter(p -> PortType.UNDEFINED.getByOrdinal(p.type()) == type)
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("У ленты нет порта " + type));
-    }
-
-    // FRONT = +Y, BACK = -Y
-    private int[] resolvePortPosition(PositionComponent position, BuildingComponent building, LogisticPort.Port port) {
-        int x = position.getX();
-        int y = position.getY();
-        return switch (PortSide.UNDEFINED.getByOrdinal(port.side())) {
-            case BACK -> new int[]{x, y - 1};
-            case FRONT -> new int[]{x, y + building.getHeight()};
-            case LEFT -> new int[]{x - 1, y};
-            case RIGHT -> new int[]{x + building.getWidth(), y};
-            default -> throw new IllegalArgumentException("Неизвестная сторона порта: " + port.side());
-        };
     }
 }

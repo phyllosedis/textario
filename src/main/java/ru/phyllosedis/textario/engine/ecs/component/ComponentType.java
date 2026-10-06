@@ -21,6 +21,7 @@ public enum ComponentType implements Type<ComponentType> {
     TIER,
 
     LOGISTIC,
+    ROTATION,
     UNDEFINED;
 
     @Override

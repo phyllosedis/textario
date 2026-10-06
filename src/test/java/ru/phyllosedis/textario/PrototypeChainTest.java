@@ -33,7 +33,7 @@ class PrototypeChainTest {
     @DisplayName("Уголь доезжает из бура в сундук через манипулятор")
     void coalReachesChest() throws Exception {
         long miner = blueprints.createMiner(18, 20, Tier.ONE, ResourceType.COAL);
-        blueprints.createInserter(18, 22, Tier.ONE, ResourceType.EARTH);
+        blueprints.createInserter(18, 22, Tier.ONE, ResourceType.EARTH, 0);
         long chest = blueprints.createChest(18, 23, Tier.ONE);
 
         Thread.sleep(6000);
@@ -63,5 +63,26 @@ class PrototypeChainTest {
                 .sum();
         System.out.println("[test] печь #" + furnace + " плиты: " + plates);
         assertTrue(plates > 0, "в печи должны быть железные плиты");
+    }
+
+    @Test
+    @DisplayName("Повёрнутая рука везёт вбок")
+    void rotatedInserterMovesSideways() throws Exception {
+        long src = blueprints.createChest(40, 22, Tier.ONE);
+        cm.add(src, cfm.create(new InventoryComponent.Args(8, 100,
+                List.of(new InventoryComponent.ReadableSlot(ResourceType.COAL, 3)))));
+        // Поворот 3: вход смотрит влево (40:22), выход — вправо (42:22)
+        blueprints.createInserter(41, 22, Tier.ONE, ResourceType.EARTH, 3);
+        long dst = blueprints.createChest(42, 22, Tier.ONE);
+
+        Thread.sleep(3000);
+
+        InventoryComponent inv = cm.get(dst, InventoryComponent.class);
+        int coal = inv.getSlots().stream()
+                .filter(s -> ResourceType.UNDEFINED.getByOrdinal(s.resource()) == ResourceType.COAL)
+                .mapToInt(InventoryComponent.Slot::count)
+                .sum();
+        System.out.println("[test] сундук-приёмник #" + dst + " уголь: " + coal);
+        assertTrue(coal > 0, "повёрнутая рука должна перевезти уголь вбок");
     }
 }

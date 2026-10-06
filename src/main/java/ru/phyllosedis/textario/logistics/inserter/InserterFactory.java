@@ -17,6 +17,7 @@ import ru.phyllosedis.textario.production.ProgressComponent;
 import ru.phyllosedis.textario.production.station.StationMarkerComponent;
 import ru.phyllosedis.textario.production.station.TierMarkerComponent;
 import ru.phyllosedis.textario.resource.ContentState;
+import ru.phyllosedis.textario.world.RotationComponent;
 
 import java.util.List;
 import java.util.Set;
@@ -39,6 +40,7 @@ public class InserterFactory extends AbstractEntityFactory<InserterFactory.Args>
         cm.add(id, cfm.create(new InserterMarkerComponent.Args()));
         cm.add(id, cfm.create(new InserterComponent.Args(stats.getTransferSpeed(), stats.getRange(), stats.getStackSize(), Set.of(ContentState.SOLID))));
         cm.add(id, cfm.create(new InventoryComponent.Args(1, stats.getStackSize(), List.of())));
+        cm.add(id, cfm.create(new RotationComponent.Args(args.getRotation())));
         cm.add(id, cfm.create(new LogisticPort.Args(List.of(
                 new LogisticPort.ReadablePort(
                         0,
@@ -56,6 +58,7 @@ public class InserterFactory extends AbstractEntityFactory<InserterFactory.Args>
     @Getter
     @SuperBuilder
     public static class Args extends AbstractEntityFactory.Args {
+        private final int rotation;
     }
 
 }

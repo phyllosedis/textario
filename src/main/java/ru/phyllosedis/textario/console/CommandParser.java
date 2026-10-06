@@ -26,8 +26,11 @@ public class CommandParser {
                         map [x y w h] — показать карту
                         inv — показать склады и буферы
                         miner x y ORE — бур (IRON_ORE/COPPER_ORE/COAL)
-                        belt x y | ins x y | chest x y | fur x y
+                        belt x y [направление] | ins x y [направление]
+                        направление: down/left/up/right (выход смотрит туда)
+                        chest x y | fur x y
                         spl x y MODE — разделитель (ROUND_ROBIN/BALANCED/...)
+                        rot x y — повернуть ленту/руку на 90°
                         quit — выход""";
                 case "map" -> parts.length >= 5
                         ? commands.map(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]),
@@ -37,8 +40,11 @@ public class CommandParser {
                 case "miner" -> commands.placeMiner(
                         Integer.parseInt(parts[1]), Integer.parseInt(parts[2]),
                         ResourceType.valueOf(parts[3].toUpperCase()));
-                case "belt" -> commands.placeBelt(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
-                case "ins" -> commands.placeInserter(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+                case "belt" -> commands.placeBelt(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]),
+                        parts.length >= 4 ? GameCommands.parseDirection(parts[3]) : 0);
+                case "ins" -> commands.placeInserter(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]),
+                        parts.length >= 4 ? GameCommands.parseDirection(parts[3]) : 0);
+                case "rot" -> commands.rotateAt(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
                 case "chest" -> commands.placeChest(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
                 case "fur" -> commands.placeFurnace(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
                 case "spl" -> commands.placeSplitter(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]),

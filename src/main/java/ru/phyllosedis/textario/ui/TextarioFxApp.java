@@ -83,6 +83,7 @@ public class TextarioFxApp extends Application {
     private int pressOffX;
     private int pressOffY;
     private boolean dragged;
+    private ContextMenu activeMenu;
 
     @Override
     public void start(Stage stage) {
@@ -195,6 +196,11 @@ public class TextarioFxApp extends Application {
     }
 
     private void showBuildMenu(ContextMenuEvent e) {
+        // Одно меню на всех: старое закрываем, новое показываем
+        if (activeMenu != null) {
+            activeMenu.hide();
+            activeMenu = null;
+        }
         int[] cellPos = toWorld(e.getX(), e.getY());
         if (cellPos == null) {
             return;
@@ -208,12 +214,24 @@ public class TextarioFxApp extends Application {
         MenuItem title = new MenuItem("Клетка " + x + ":" + y + " — " + safeDescribe(x, y));
         title.setDisable(true);
         menu.getItems().add(title);
+
+        Long entityId = commands.entityAt(x, y);
+        if (entityId != null && commands.isRotatable(entityId)) {
+            menu.getItems().add(new SeparatorMenuItem());
+            MenuItem rotate = new MenuItem("Повернуть ↻");
+            rotate.setOnAction(ev -> {
+                statusPos.setText(commands.rotateAt(x, y));
+                redraw();
+            });
+            menu.getItems().add(rotate);
+        }
+
         menu.getItems().add(new SeparatorMenuItem());
         menu.getItems().add(buildItem("Бур (Fe)", () -> commands.placeMiner(x, y, ResourceType.IRON_ORE)));
         menu.getItems().add(buildItem("Бур (Cu)", () -> commands.placeMiner(x, y, ResourceType.COPPER_ORE)));
         menu.getItems().add(buildItem("Бур (уголь)", () -> commands.placeMiner(x, y, ResourceType.COAL)));
-        menu.getItems().add(buildItem("Лента", () -> commands.placeBelt(x, y)));
-        menu.getItems().add(buildItem("Рука", () -> commands.placeInserter(x, y)));
+        menu.getItems().add(dirMenu("Лента", (xx, yy, rot) -> commands.placeBelt(xx, yy, rot), x, y));
+        menu.getItems().add(dirMenu("Рука", (xx, yy, rot) -> commands.placeInserter(xx, yy, rot), x, y));
         menu.getItems().add(buildItem("Сундук", () -> commands.placeChest(x, y)));
         menu.getItems().add(buildItem("Печь", () -> commands.placeFurnace(x, y)));
         menu.getItems().add(buildItem("Разделитель", () -> commands.placeSplitter(x, y, SplitMode.ROUND_ROBIN)));
@@ -223,7 +241,32 @@ public class TextarioFxApp extends Application {
         menu.getItems().add(cancel);
         menu.setAutoHide(true);
         menu.setHideOnEscape(true);
+        menu.setOnHidden(ev -> {
+            if (activeMenu == menu) {
+                activeMenu = null;
+            }
+        });
+        activeMenu = menu;
         menu.show(canvas, e.getScreenX(), e.getScreenY());
+    }
+
+    private javafx.scene.control.Menu dirMenu(String name, Place3 place, int x, int y) {
+        javafx.scene.control.Menu menu = new javafx.scene.control.Menu(name);
+        String[] names = {"↓ вниз", "← влево", "↑ вверх", "→ вправо"};
+        for (int rot = 0; rot < 4; rot++) {
+            final int direction = rot;
+            MenuItem item = new MenuItem(names[rot]);
+            item.setOnAction(e -> {
+                statusPos.setText(place.place(x, y, direction));
+                redraw();
+            });
+            menu.getItems().add(item);
+        }
+        return menu;
+    }
+
+    private interface Place3 {
+        String place(int x, int y, int rotation);
     }
 
     private MenuItem buildItem(String name, BuildAction action) {

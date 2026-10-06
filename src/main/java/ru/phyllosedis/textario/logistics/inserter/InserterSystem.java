@@ -14,7 +14,9 @@ import ru.phyllosedis.textario.resource.ResourceType;
 import ru.phyllosedis.textario.resource.SystemOrder;
 import ru.phyllosedis.textario.world.BuildingComponent;
 import ru.phyllosedis.textario.world.OccupancyGrid;
+import ru.phyllosedis.textario.world.PortResolver;
 import ru.phyllosedis.textario.world.PositionComponent;
+import ru.phyllosedis.textario.world.RotationComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,19 +50,9 @@ public class InserterSystem extends AbstractSystem {
         LogisticPort.Port inputPort = findPort(port, PortType.INPUT);
         LogisticPort.Port outputPort = findPort(port, PortType.OUTPUT);
 
-        int[] inputPosition =
-                resolvePortPosition(
-                        position,
-                        building,
-                        inputPort
-                );
+        int[] inputPosition = PortResolver.resolve(position, building, inputPort, rotationOf(id));
 
-        int[] outputPosition =
-                resolvePortPosition(
-                        position,
-                        building,
-                        outputPort
-                );
+        int[] outputPosition = PortResolver.resolve(position, building, outputPort, rotationOf(id));
 
         Long sourceId = occupancyGrid.getEntityAt(
                 inputPosition[0],
@@ -308,42 +300,8 @@ public class InserterSystem extends AbstractSystem {
                 );
     }
 
-    // FRONT = +Y, BACK = -Y
-    private int[] resolvePortPosition(
-            PositionComponent position,
-            BuildingComponent building,
-            LogisticPort.Port port
-    ) {
-        int x = position.getX();
-        int y = position.getY();
-
-        return switch (
-                PortSide.UNDEFINED.getByOrdinal(port.side())
-                ) {
-            case BACK -> new int[]{
-                    x,
-                    y - 1
-            };
-
-            case FRONT -> new int[]{
-                    x,
-                    y + building.getHeight()
-            };
-
-            case LEFT -> new int[]{
-                    x - 1,
-                    y
-            };
-
-            case RIGHT -> new int[]{
-                    x + building.getWidth(),
-                    y
-            };
-
-            default -> throw new IllegalArgumentException(
-                    "Неизвестная сторона порта: "
-                            + port.side()
-            );
-        };
+    private int rotationOf(long id) {
+        RotationComponent rotation = cm.get(id, RotationComponent.class);
+        return rotation == null ? 0 : rotation.getSteps();
     }
 }

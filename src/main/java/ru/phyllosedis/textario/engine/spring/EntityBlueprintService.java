@@ -75,7 +75,7 @@ public class EntityBlueprintService {
     /**
      * 2. СОЗДАНИЕ КОНВЕЙЕРНЫХ ЛЕНТ
      */
-    public long createBelt(int x, int y, Tier tier, ResourceType resourceType) {
+    public long createBelt(int x, int y, Tier tier, ResourceType resourceType, int rotation) {
         long id = prepareEntity(x, y, 1, 1, ResourceCategory.SOIL);
         BeltFactory beltFactory = ef.get(BeltFactory.class);
         beltFactory.create(BeltFactory.Args.builder()
@@ -85,6 +85,7 @@ public class EntityBlueprintService {
                 .width(1)
                 .height(1)
                 .tier(tier)
+                .rotation(rotation)
                 .build());
         note(id, "belt@" + x + ":" + y);
         return id;
@@ -93,7 +94,7 @@ public class EntityBlueprintService {
     /**
      * 3. СОЗДАНИЕ МАНИПУЛЯТОРОВ / РОБО-РУК
      */
-    public long createInserter(int x, int y, Tier tier, ResourceType resourceType) {
+    public long createInserter(int x, int y, Tier tier, ResourceType resourceType, int rotation) {
         long id = prepareEntity(x, y, 1, 1, ResourceCategory.SOIL);
         ef.get(InserterFactory.class).create(InserterFactory.Args.builder()
                 .id(id)
@@ -102,6 +103,7 @@ public class EntityBlueprintService {
                 .y(y)
                 .width(1)
                 .height(1)
+                .rotation(rotation)
                 .build());
         note(id, "inserter@" + x + ":" + y);
         return id;
