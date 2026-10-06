@@ -37,6 +37,10 @@ public class MapRenderer {
         return sb.toString();
     }
 
+    public char glyphAt(int x, int y) {
+        return glyph(x, y);
+    }
+
     private char glyph(int x, int y) {
         Long entityId = null;
         try {

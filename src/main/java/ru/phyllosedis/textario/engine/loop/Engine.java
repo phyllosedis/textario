@@ -11,9 +11,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class Engine {
     private final List<System> systems;
+    private final TickGate tickGate;
 
     @Scheduled(fixedRateString = "${textario.tick-rate-ms}")
     public void gameTick() {
+        if (tickGate.isPaused()) {
+            return;
+        }
         for (System system : systems) {
             try {
                 system.update();

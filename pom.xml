@@ -29,6 +29,8 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<javafx.version>21.0.4</javafx.version>
+		<javafx.classifier>win</javafx.classifier>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -57,9 +59,49 @@
 			<version>0.10.2</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-base</artifactId>
+			<version>${javafx.version}</version>
+			<classifier>${javafx.classifier}</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-graphics</artifactId>
+			<version>${javafx.version}</version>
+			<classifier>${javafx.classifier}</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>${javafx.version}</version>
+			<classifier>${javafx.classifier}</classifier>
+		</dependency>
 	</dependencies>
 
 	<profiles>
+		<profile>
+			<id>javafx-linux</id>
+			<activation>
+				<os>
+					<family>unix</family>
+				</os>
+			</activation>
+			<properties>
+				<javafx.classifier>linux</javafx.classifier>
+			</properties>
+		</profile>
+		<profile>
+			<id>javafx-mac</id>
+			<activation>
+				<os>
+					<family>mac</family>
+				</os>
+			</activation>
+			<properties>
+				<javafx.classifier>mac</javafx.classifier>
+			</properties>
+		</profile>
 		<profile>
 			<id>freebsd-deploy</id>
 			<distributionManagement>
