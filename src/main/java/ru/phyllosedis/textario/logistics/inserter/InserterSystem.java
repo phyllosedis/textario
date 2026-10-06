@@ -7,9 +7,11 @@ import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
 import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
+import ru.phyllosedis.textario.inventory.InventoryAccess;
 import ru.phyllosedis.textario.logistics.port.LogisticPort;
 import ru.phyllosedis.textario.logistics.port.PortSide;
 import ru.phyllosedis.textario.logistics.port.PortType;
+import ru.phyllosedis.textario.production.ProgressComponent;
 import ru.phyllosedis.textario.resource.ResourceType;
 import ru.phyllosedis.textario.resource.SystemOrder;
 import ru.phyllosedis.textario.world.BuildingComponent;
@@ -71,20 +73,30 @@ public class InserterSystem extends AbstractSystem {
             return;
         }
 
-        InventoryComponent sourceInventory = cm.get(sourceId, InventoryComponent.class);
+        InventoryComponent sourceInventory = InventoryAccess.sourceInventory(cm, sourceId);
         InventoryComponent destinationInventory = cm.get(destinationId, InventoryComponent.class);
 
         if (sourceInventory == null || destinationInventory == null) {
             return;
         }
 
-        transfer(
+        // Замах: прогресс капает со скоростью руки, перенос — пачкой stackSize
+        ProgressComponent progress = cm.get(id, ProgressComponent.class);
+        double swing = (progress == null ? 100.0 : progress.getProgress()) + inserter.getTransferSpeed();
+        if (swing < 100.0) {
+            cm.add(id, cfm.create(new ProgressComponent.Args(swing)));
+            return;
+        }
+
+        boolean transferred = transfer(
                 inserter,
                 sourceId,
                 sourceInventory,
                 destinationId,
                 destinationInventory
         );
+
+        cm.add(id, cfm.create(new ProgressComponent.Args(transferred ? 0.0 : 100.0)));
     }
 
     private boolean transfer(
@@ -259,26 +271,7 @@ public class InserterSystem extends AbstractSystem {
             InventoryComponent inventory,
             List<InventoryComponent.Slot> slots
     ) {
-        cm.add(
-                entityId,
-                cfm.create(
-                        new InventoryComponent.Args(
-                                inventory.getSize(),
-                                inventory.getStackSize(),
-                                slots.stream()
-                                        .map(slot ->
-                                                new InventoryComponent.ReadableSlot(
-                                                        ResourceType.UNDEFINED
-                                                                .getByOrdinal(
-                                                                        slot.resource()
-                                                                ),
-                                                        slot.count()
-                                                )
-                                        )
-                                        .toList()
-                        )
-                )
-        );
+        InventoryAccess.writeInventory(cm, cfm, entityId, inventory, slots);
     }
 
     private LogisticPort.Port findPort(

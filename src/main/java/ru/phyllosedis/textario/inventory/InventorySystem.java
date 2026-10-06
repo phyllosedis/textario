@@ -20,27 +20,56 @@ public abstract class InventorySystem extends AbstractSystem {
     /**
      * Внутренний хелпер для наследников: проверяет место и добавляет предмет.
      * Возвращает true, если предмет поместился.
-     */    protected boolean insertItem(long id, ResourceType resType) {
-        InventoryComponent oldInv = cm.get(id, InventoryComponent.class);
-        int currentStackLimit = oldInv.getStackSize();
+     */    
+    protected boolean insertItem(long id, ResourceType resType) {
+        InventoryComponent inv = cm.get(id, InventoryComponent.class);
+        if (inv == null) {
+            return false;
+        }
+        List<InventoryComponent.Slot> next = withAdded(inv, resType);
+        if (next == null) {
+            return false;
+        }
+        cm.add(id, cfm.create(new InventoryComponent.Args(
+                inv.getSize(), inv.getStackSize(), toReadable(next))));
+        return true;
+    }
 
-        boolean hasSpace = false;
-        for (InventoryComponent.Slot slot : oldInv.getSlots()) {
-            if (slot.resource() == resType.ordinal() && slot.count() < currentStackLimit) {
-                hasSpace = true;
+    /**
+     * То же, но в выходной склад станции.
+     */
+    protected boolean insertOutputItem(long id, ResourceType resType) {
+        OutputInventoryComponent inv = cm.get(id, OutputInventoryComponent.class);
+        if (inv == null) {
+            return false;
+        }
+        List<InventoryComponent.Slot> next = withAdded(inv, resType);
+        if (next == null) {
+            return false;
+        }
+        cm.add(id, cfm.create(new OutputInventoryComponent.Args(
+                inv.getSize(), inv.getStackSize(), toReadable(next))));
+        return true;
+    }
+
+    protected int insertOutputStack(long id, ResourceType resType, int count) {
+        int inserted = 0;
+        for (int i = 0; i < count; i++) {
+            if (insertOutputItem(id, resType)) {
+                inserted++;
+            } else {
                 break;
             }
         }
-        if (!hasSpace && oldInv.getSlots().size() < oldInv.getSize()) {
-            hasSpace = true;
-        }
+        return inserted;
+    }
 
-        if (!hasSpace) return false;
-
+    private static List<InventoryComponent.Slot> withAdded(InventoryComponent inv, ResourceType resType) {
+        int currentStackLimit = inv.getStackSize();
         List<InventoryComponent.ReadableSlot> readableSlots = new ArrayList<>();
         boolean addedToExisting = false;
 
-        for (InventoryComponent.Slot slot : oldInv.getSlots()) {
+        for (InventoryComponent.Slot slot : inv.getSlots()) {
             ResourceType type = ResourceType.UNDEFINED.getByOrdinal(slot.resource());
             int count = slot.count();
 
@@ -53,11 +82,22 @@ public abstract class InventorySystem extends AbstractSystem {
         }
 
         if (!addedToExisting) {
+            if (inv.getSlots().size() >= inv.getSize()) {
+                return null;
+            }
             readableSlots.add(new InventoryComponent.ReadableSlot(resType, 1));
         }
 
-        cm.add(id, cfm.create(new InventoryComponent.Args(oldInv.getSize(), oldInv.getStackSize(), readableSlots)));
-        return true;
+        return readableSlots.stream()
+                .map(e -> new InventoryComponent.Slot(e.type().ordinal(), e.count()))
+                .toList();
+    }
+
+    private static List<InventoryComponent.ReadableSlot> toReadable(List<InventoryComponent.Slot> slots) {
+        return slots.stream()
+                .map(e -> new InventoryComponent.ReadableSlot(
+                        ResourceType.UNDEFINED.getByOrdinal(e.resource()), e.count()))
+                .toList();
     }
 
     /**

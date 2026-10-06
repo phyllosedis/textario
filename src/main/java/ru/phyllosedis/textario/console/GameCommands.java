@@ -6,6 +6,7 @@ import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.spring.EntityBlueprintService;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
+import ru.phyllosedis.textario.inventory.OutputInventoryComponent;
 import ru.phyllosedis.textario.logistics.belt.BeltMarkerComponent;
 import ru.phyllosedis.textario.logistics.inserter.InserterMarkerComponent;
 import ru.phyllosedis.textario.logistics.splitter.SplitMode;
@@ -404,6 +405,15 @@ public class GameCommands {
             if (inv != null) {
                 sb.append(" inv=[");
                 for (InventoryComponent.Slot slot : inv.getSlots()) {
+                    ResourceType type = ResourceType.UNDEFINED.getByOrdinal(slot.resource());
+                    sb.append(type).append("x").append(slot.count()).append(" ");
+                }
+                sb.append("]");
+            }
+            OutputInventoryComponent out = cm.get(id, OutputInventoryComponent.class);
+            if (out != null && !out.getSlots().isEmpty()) {
+                sb.append(" out=[");
+                for (InventoryComponent.Slot slot : out.getSlots()) {
                     ResourceType type = ResourceType.UNDEFINED.getByOrdinal(slot.resource());
                     sb.append(type).append("x").append(slot.count()).append(" ");
                 }

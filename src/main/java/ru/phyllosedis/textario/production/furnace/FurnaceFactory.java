@@ -9,6 +9,7 @@ import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.AssociatedMarker;
 import ru.phyllosedis.textario.engine.ecs.entity.AbstractEntityFactory;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
+import ru.phyllosedis.textario.inventory.OutputInventoryComponent;
 import ru.phyllosedis.textario.logistics.ContentStateComponent;
 import ru.phyllosedis.textario.production.ProduceSpeedComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
@@ -42,6 +43,7 @@ public class FurnaceFactory extends AbstractEntityFactory<FurnaceFactory.Args> {
         cm.add(id, cfm.create(new FurnaceComponent.Args()));
         cm.add(id, cfm.create(new FuelComponent.Args(0)));
         cm.add(id, cfm.create(new InventoryComponent.Args(4, 50, List.of())));
+        cm.add(id, cfm.create(new OutputInventoryComponent.Args(2, 50, List.of())));
     }
 
     @Getter

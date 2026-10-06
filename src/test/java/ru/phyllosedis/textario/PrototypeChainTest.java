@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.phyllosedis.textario.bootstrap.TextarioApplication;
 import ru.phyllosedis.textario.console.GameCommands;
+import ru.phyllosedis.textario.inventory.OutputInventoryComponent;
 import ru.phyllosedis.textario.world.SaveService;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
@@ -65,8 +66,8 @@ class PrototypeChainTest {
 
         Thread.sleep(6000);
 
-        InventoryComponent inv = cm.get(furnace, InventoryComponent.class);
-        int plates = inv.getSlots().stream()
+        OutputInventoryComponent out = cm.get(furnace, OutputInventoryComponent.class);
+        int plates = out.getSlots().stream()
                 .filter(s -> ResourceType.UNDEFINED.getByOrdinal(s.resource()) == ResourceType.IRON_PLATE)
                 .mapToInt(InventoryComponent.Slot::count)
                 .sum();
@@ -106,8 +107,8 @@ class PrototypeChainTest {
 
         Thread.sleep(5000);
 
-        InventoryComponent inv = cm.get(asm, InventoryComponent.class);
-        int gears = inv.getSlots().stream()
+        OutputInventoryComponent out = cm.get(asm, OutputInventoryComponent.class);
+        int gears = out.getSlots().stream()
                 .filter(s -> ResourceType.UNDEFINED.getByOrdinal(s.resource()) == ResourceType.IRON_GEAR)
                 .mapToInt(InventoryComponent.Slot::count)
                 .sum();
@@ -156,6 +157,58 @@ class PrototypeChainTest {
                 .sum();
         System.out.println("[test] сундук за подземкой #" + dst + " уголь: " + coal);
         assertTrue(coal > 0, "уголь должен пройти сквозь подземку (50:41 пустая)");
+    }
+
+    @Test
+    @DisplayName("Рука берёт плиты, а не руду, и не чаще замаха")
+    void inserterPrefersOutput() throws Exception {
+        long furnace = blueprints.createFurnace(55, 30, Tier.ONE);
+        cm.add(furnace, cfm.create(new InventoryComponent.Args(4, 50,
+                List.of(new InventoryComponent.ReadableSlot(ResourceType.IRON_ORE, 3)))));
+        cm.add(furnace, cfm.create(new OutputInventoryComponent.Args(2, 50,
+                List.of(new InventoryComponent.ReadableSlot(ResourceType.IRON_PLATE, 2)))));
+        blueprints.createInserter(55, 32, Tier.ONE, ResourceType.EARTH, 0);
+        long chest = blueprints.createChest(55, 33, Tier.ONE);
+
+        Thread.sleep(2500);
+
+        InventoryComponent chestInv = cm.get(chest, InventoryComponent.class);
+        int plates = chestInv.getSlots().stream()
+                .filter(s -> ResourceType.UNDEFINED.getByOrdinal(s.resource()) == ResourceType.IRON_PLATE)
+                .mapToInt(InventoryComponent.Slot::count)
+                .sum();
+        int oreInChest = chestInv.getSlots().stream()
+                .filter(s -> ResourceType.UNDEFINED.getByOrdinal(s.resource()) == ResourceType.IRON_ORE)
+                .mapToInt(InventoryComponent.Slot::count)
+                .sum();
+        InventoryComponent furnaceInv = cm.get(furnace, InventoryComponent.class);
+        int oreLeft = furnaceInv.getSlots().stream()
+                .filter(s -> ResourceType.UNDEFINED.getByOrdinal(s.resource()) == ResourceType.IRON_ORE)
+                .mapToInt(InventoryComponent.Slot::count)
+                .sum();
+        System.out.println("[test] в сундуке плиты: " + plates + ", руды: " + oreInChest + ", в печи руды: " + oreLeft);
+        assertTrue(plates >= 1, "рука должна вынуть плиты из выхода печи");
+        assertTrue(oreInChest == 0 && oreLeft == 3, "руда должна лежать нетронутой");
+    }
+
+    @Test
+    @DisplayName("Рука ограничена скоростью замаха")
+    void inserterRateLimited() throws Exception {
+        long src = blueprints.createChest(70, 70, Tier.ONE);
+        cm.add(src, cfm.create(new InventoryComponent.Args(8, 100,
+                List.of(new InventoryComponent.ReadableSlot(ResourceType.COAL, 50)))));
+        blueprints.createInserter(71, 70, Tier.ONE, ResourceType.EARTH, 3);
+        long dst = blueprints.createChest(72, 70, Tier.ONE);
+
+        Thread.sleep(2500);
+
+        InventoryComponent inv = cm.get(dst, InventoryComponent.class);
+        int coal = inv.getSlots().stream()
+                .filter(s -> ResourceType.UNDEFINED.getByOrdinal(s.resource()) == ResourceType.COAL)
+                .mapToInt(InventoryComponent.Slot::count)
+                .sum();
+        System.out.println("[test] за 2.5с рука перенесла угля: " + coal);
+        assertTrue(coal >= 1 && coal <= 4, "рука 1 тира таскает ~1 шт/с, а не всё сразу, перенесено: " + coal);
     }
 
     @Test

@@ -7,6 +7,7 @@ import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
 import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
+import ru.phyllosedis.textario.inventory.InventoryAccess;
 import ru.phyllosedis.textario.logistics.port.LogisticPort;
 import ru.phyllosedis.textario.logistics.port.PortSide;
 import ru.phyllosedis.textario.logistics.port.PortType;
@@ -17,9 +18,6 @@ import ru.phyllosedis.textario.world.OccupancyGrid;
 import ru.phyllosedis.textario.world.PortResolver;
 import ru.phyllosedis.textario.world.PositionComponent;
 import ru.phyllosedis.textario.world.RotationComponent;
-import ru.phyllosedis.textario.world.BuildingComponent;
-import ru.phyllosedis.textario.world.OccupancyGrid;
-import ru.phyllosedis.textario.world.PositionComponent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -99,7 +97,7 @@ public class SplitterSystem extends AbstractSystem {
         if (srcId == null || srcId == id) {
             return;
         }
-        InventoryComponent src = cm.get(srcId, InventoryComponent.class);
+        InventoryComponent src = InventoryAccess.sourceInventory(cm, srcId);
         InventoryComponent buf = cm.get(id, InventoryComponent.class);
         if (src == null || src.getSlots().isEmpty() || buf == null) {
             return;
@@ -194,23 +192,6 @@ public class SplitterSystem extends AbstractSystem {
     }
 
     private void writeInventory(long entityId, InventoryComponent inv, List<InventoryComponent.Slot> slots) {
-        cm.add(entityId, cfm.create(new InventoryComponent.Args(
-                inv.getSize(), inv.getStackSize(),
-                slots.stream()
-                        .map(s -> new InventoryComponent.ReadableSlot(
-                                ResourceType.UNDEFINED.getByOrdinal(s.resource()), s.count()))
-                        .toList())));
-    }
-
-    private int[] resolvePortPosition(PositionComponent position, BuildingComponent building, LogisticPort.Port port) {
-        int x = position.getX();
-        int y = position.getY();
-        return switch (PortSide.UNDEFINED.getByOrdinal(port.side())) {
-            case BACK -> new int[]{x, y - 1};
-            case FRONT -> new int[]{x, y + building.getHeight()};
-            case LEFT -> new int[]{x - 1, y};
-            case RIGHT -> new int[]{x + building.getWidth(), y};
-            default -> throw new IllegalArgumentException("Неизвестная сторона порта: " + port.side());
-        };
+        InventoryAccess.writeInventory(cm, cfm, entityId, inv, slots);
     }
 }

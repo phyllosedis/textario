@@ -7,6 +7,7 @@ import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
 import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
+import ru.phyllosedis.textario.inventory.InventoryAccess;
 import ru.phyllosedis.textario.logistics.port.LogisticPort;
 import ru.phyllosedis.textario.logistics.port.PortSide;
 import ru.phyllosedis.textario.logistics.port.PortType;
@@ -91,7 +92,7 @@ public class BeltSystem extends AbstractSystem {
         if (srcId == null || srcId == id) {
             return;
         }
-        InventoryComponent src = cm.get(srcId, InventoryComponent.class);
+        InventoryComponent src = InventoryAccess.sourceInventory(cm, srcId);
         if (src == null || src.getSlots().isEmpty()) {
             return;
         }
@@ -163,13 +164,7 @@ public class BeltSystem extends AbstractSystem {
     }
 
     private void writeInventory(long entityId, InventoryComponent inv, List<InventoryComponent.Slot> slots) {
-        cm.add(entityId, cfm.create(new InventoryComponent.Args(
-                inv.getSize(),
-                inv.getStackSize(),
-                slots.stream()
-                        .map(s -> new InventoryComponent.ReadableSlot(
-                                ResourceType.UNDEFINED.getByOrdinal(s.resource()), s.count()))
-                        .toList())));
+        InventoryAccess.writeInventory(cm, cfm, entityId, inv, slots);
     }
 
     private int rotationOf(long id) {

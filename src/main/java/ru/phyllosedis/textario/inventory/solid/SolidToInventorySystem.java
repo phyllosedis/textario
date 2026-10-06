@@ -6,6 +6,8 @@ import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
+import ru.phyllosedis.textario.inventory.InventorySystem;
+import ru.phyllosedis.textario.inventory.OutputInventoryComponent;
 import ru.phyllosedis.textario.logistics.ContentStateComponent;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.inventory.InventorySystem;
@@ -32,7 +34,17 @@ public class SolidToInventorySystem extends InventorySystem {
         if (dispatched == null) return;
 
         ResourceType resType = ResourceType.UNDEFINED.getByOrdinal(dispatched.getResource());
-        int inserted = insertStack(id, resType, dispatched.getCount());
+        // У станций с выходным складом продукция идёт туда, иначе в обычный
+        boolean useOutput = cm.has(id, OutputInventoryComponent.class);
+        int inserted = 0;
+        for (int i = 0; i < dispatched.getCount(); i++) {
+            boolean ok = useOutput ? insertOutputItem(id, resType) : insertItem(id, resType);
+            if (ok) {
+                inserted++;
+            } else {
+                break;
+            }
+        }
 
         if (inserted >= dispatched.getCount()) {
             // Всё влезло — очищаем буфер выдачи

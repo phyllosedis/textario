@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.phyllosedis.textario.console.MapRenderer;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
+import ru.phyllosedis.textario.inventory.OutputInventoryComponent;
 import ru.phyllosedis.textario.logistics.port.LogisticPort;
 import ru.phyllosedis.textario.logistics.port.PortSide;
 import ru.phyllosedis.textario.logistics.port.PortType;
@@ -102,8 +103,7 @@ public class WorldView {
      * Короткое описание клетки для статусбара: координаты,
      * террейн, постройка и её склад.
      */
-    public String describe(int x, int y) {
-        ResourceType terrain;
+    public String describe(int x, int y) {        ResourceType terrain;
         try {
             terrain = occupancyGrid.getTerrainAt(x, y);
         } catch (Exception e) {
@@ -138,10 +138,13 @@ public class WorldView {
         InventoryComponent inv = cm.get(entityId, InventoryComponent.class);
         if (inv != null && !inv.getSlots().isEmpty()) {
             sb.append(" inv=[");
-            for (InventoryComponent.Slot slot : inv.getSlots()) {
-                sb.append(ResourceType.UNDEFINED.getByOrdinal(slot.resource()))
-                        .append("x").append(slot.count()).append(" ");
-            }
+            appendSlots(sb, inv);
+            sb.append("]");
+        }
+        OutputInventoryComponent out = cm.get(entityId, OutputInventoryComponent.class);
+        if (out != null && !out.getSlots().isEmpty()) {
+            sb.append(" out=[");
+            appendSlots(sb, out);
             sb.append("]");
         }
         DispatchedProductComponent buf = cm.get(entityId, DispatchedProductComponent.class);
@@ -154,5 +157,12 @@ public class WorldView {
             sb.append(String.format(" %.0f%%", progress.getProgress()));
         }
         return sb.toString();
+    }
+
+    private static void appendSlots(StringBuilder sb, InventoryComponent inv) {
+        for (InventoryComponent.Slot slot : inv.getSlots()) {
+            sb.append(ResourceType.UNDEFINED.getByOrdinal(slot.resource()))
+                    .append("x").append(slot.count()).append(" ");
+        }
     }
 }

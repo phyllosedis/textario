@@ -40,6 +40,7 @@ public class InserterFactory extends AbstractEntityFactory<InserterFactory.Args>
         cm.add(id, cfm.create(new InserterMarkerComponent.Args()));
         cm.add(id, cfm.create(new InserterComponent.Args(stats.getTransferSpeed(), stats.getRange(), stats.getStackSize(), Set.of(ContentState.SOLID))));
         cm.add(id, cfm.create(new InventoryComponent.Args(1, stats.getStackSize(), List.of())));
+        cm.add(id, cfm.create(new ProgressComponent.Args(0)));
         cm.add(id, cfm.create(new RotationComponent.Args(args.getRotation())));
         cm.add(id, cfm.create(new LogisticPort.Args(List.of(
                 new LogisticPort.ReadablePort(
