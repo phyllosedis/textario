@@ -28,6 +28,7 @@ import javafx.util.Duration;
 import ru.phyllosedis.textario.console.CommandParser;
 import ru.phyllosedis.textario.console.GameCommands;
 import ru.phyllosedis.textario.engine.loop.TickGate;
+import ru.phyllosedis.textario.logistics.port.PortSide;
 import ru.phyllosedis.textario.logistics.splitter.SplitMode;
 import ru.phyllosedis.textario.resource.ResourceType;
 
@@ -175,7 +176,7 @@ public class TextarioFxApp extends Application {
         side.setPrefWidth(340);
 
         HBox legend = new HBox(10,
-                new Label("M бур  B лента  I рука  S разделитель  C сундук  F печь | ЛКМ выбрать/тянуть  ПКМ построить"));
+                new Label("стрелка = куда течёт | рычаг с шарниром = рука | ЛКМ выбрать/тянуть  ПКМ построить"));  
         legend.setPadding(new Insets(4));
 
         BorderPane root = new BorderPane(canvas, null, side, legend, null);
@@ -216,6 +217,12 @@ public class TextarioFxApp extends Application {
         menu.getItems().add(buildItem("Сундук", () -> commands.placeChest(x, y)));
         menu.getItems().add(buildItem("Печь", () -> commands.placeFurnace(x, y)));
         menu.getItems().add(buildItem("Разделитель", () -> commands.placeSplitter(x, y, SplitMode.ROUND_ROBIN)));
+        menu.getItems().add(new SeparatorMenuItem());
+        MenuItem cancel = new MenuItem("Отмена (Esc)");
+        cancel.setOnAction(ev -> menu.hide());
+        menu.getItems().add(cancel);
+        menu.setAutoHide(true);
+        menu.setHideOnEscape(true);
         menu.show(canvas, e.getScreenX(), e.getScreenY());
     }
 
@@ -280,9 +287,7 @@ public class TextarioFxApp extends Application {
                 g.setFill(entity);
                 double pad = Math.max(2, cell * 0.12);
                 g.fillRoundRect(px + pad, py + pad, cell - pad * 2, cell - pad * 2, 6, 6);
-                g.setFill(Color.BLACK);
-                g.setFont(Font.font("Monospaced", Math.max(8, cell * 0.5)));
-                g.fillText(String.valueOf(c.glyph()), px + cell * 0.32, py + cell * 0.68);
+                drawEntityIcon(g, c, px, py, cell);
             }
         }
 
@@ -295,6 +300,133 @@ public class TextarioFxApp extends Application {
         }
 
         drawRuler(g, cols, rows);
+    }
+
+    /**
+     * Векторный значок постройки вместо буквы. Направление портов:
+     * BACK = вверх, FRONT = вниз, LEFT = влево, RIGHT = вправо.
+     */
+    private void drawEntityIcon(GraphicsContext g, WorldView.Cell c, double px, double py, double s) {
+        double cx = px + s / 2.0;
+        double cy = py + s / 2.0;
+        g.setFill(Color.BLACK);
+        g.setStroke(Color.BLACK);
+
+        if (!c.inputs().isEmpty() || !c.outputs().isEmpty()) {
+            drawFlowIcon(g, c, px, py, s, cx, cy);
+            return;
+        }
+        switch (c.glyph()) {
+            case 'M' -> {
+                // Бур: кольцо + сверло вниз
+                g.setLineWidth(Math.max(1.5, s * 0.07));
+                g.strokeOval(cx - s * 0.28, cy - s * 0.32, s * 0.56, s * 0.56);
+                g.fillPolygon(
+                        new double[]{cx - s * 0.12, cx + s * 0.12, cx},
+                        new double[]{cy - s * 0.05, cy - s * 0.05, cy + s * 0.38}, 3);
+            }
+            case 'F' -> {
+                // Печь: пламя треугольником вверх
+                g.fillPolygon(
+                        new double[]{cx - s * 0.26, cx + s * 0.26, cx},
+                        new double[]{cy + s * 0.32, cy + s * 0.32, cy - s * 0.36}, 3);
+                g.setFill(Color.web("#ffb060"));
+                g.fillPolygon(
+                        new double[]{cx - s * 0.11, cx + s * 0.11, cx},
+                        new double[]{cy + s * 0.24, cy + s * 0.24, cy - s * 0.14}, 3);
+            }
+            case 'C' -> {
+                // Сундук: ящик с крышкой
+                g.setLineWidth(Math.max(1.5, s * 0.07));
+                g.strokeRect(cx - s * 0.3, cy - s * 0.22, s * 0.6, s * 0.5);
+                g.setLineWidth(Math.max(1, s * 0.05));
+                g.strokeLine(cx - s * 0.3, cy - s * 0.05, cx + s * 0.3, cy - s * 0.05);
+                g.fillRect(cx - s * 0.05, cy - s * 0.1, s * 0.1, s * 0.12);
+            }
+            default -> {
+                g.setFont(Font.font("Monospaced", Math.max(8, s * 0.5)));
+                g.setTextAlign(TextAlignment.CENTER);
+                g.fillText(String.valueOf(c.glyph()), cx, cy + s * 0.18);
+                g.setTextAlign(TextAlignment.LEFT);
+            }
+        }
+    }
+
+    private void drawFlowIcon(GraphicsContext g, WorldView.Cell c, double px, double py, double s,
+                              double cx, double cy) {
+        boolean singleLane = c.inputs().size() == 1 && c.outputs().size() == 1;
+        boolean isInserter = c.glyph() == 'I';
+
+        if (singleLane) {
+            // Вал от входа к выходу: у ленты толстый (ролик), у руки тонкий (рычаг)
+            double[] in = edgeCenter(c.inputs().get(0), px, py, s);
+            double[] out = edgeCenter(c.outputs().get(0), px, py, s);
+            g.setLineWidth(isInserter ? Math.max(1.5, s * 0.1) : Math.max(2, s * 0.2));
+            g.strokeLine(in[0], in[1], out[0], out[1]);
+            if (isInserter) {
+                // Шарнир рычага + захват на входе
+                g.fillOval(cx - s * 0.13, cy - s * 0.13, s * 0.26, s * 0.26);
+                g.setFill(Color.web("#e0e0e0"));
+                g.fillRect(in[0] - s * 0.09, in[1] - s * 0.09, s * 0.18, s * 0.18);
+                g.setFill(Color.BLACK);
+            } else {
+                // Ролик ленты по центру
+                g.strokeOval(cx - s * 0.14, cy - s * 0.14, s * 0.28, s * 0.28);
+            }
+        }
+
+        for (PortSide in : c.inputs()) {
+            drawHead(g, inEdgeTip(in, px, py, s, true), dirOf(in), Math.max(3, s * 0.16), false);
+        }
+        for (PortSide out : c.outputs()) {
+            drawHead(g, edgeCenter(out, px, py, s), dirOf(out), Math.max(4, s * 0.2), true);
+        }
+    }
+
+    private double[] dirOf(PortSide side) {
+        return switch (side) {
+            case BACK -> new double[]{0, -1};
+            case FRONT -> new double[]{0, 1};
+            case LEFT -> new double[]{-1, 0};
+            case RIGHT -> new double[]{1, 0};
+            default -> new double[]{0, 1};
+        };
+    }
+
+    private double[] edgeCenter(PortSide side, double px, double py, double s) {
+        return switch (side) {
+            case BACK -> new double[]{px + s / 2.0, py + 1};
+            case FRONT -> new double[]{px + s / 2.0, py + s - 1};
+            case LEFT -> new double[]{px + 1, py + s / 2.0};
+            case RIGHT -> new double[]{px + s - 1, py + s / 2.0};
+            default -> new double[]{px + s / 2.0, py + s - 1};
+        };
+    }
+
+    private double[] inEdgeTip(PortSide side, double px, double py, double s, boolean inward) {
+        double[] e = edgeCenter(side, px, py, s);
+        double[] d = dirOf(side);
+        double k = inward ? -s * 0.22 : 0;
+        return new double[]{e[0] + d[0] * k, e[1] + d[1] * k};
+    }
+
+    private void drawHead(GraphicsContext g, double[] tip, double[] dir, double size, boolean filled) {
+        double bx = tip[0] - dir[0] * size;
+        double by = tip[1] - dir[1] * size;
+        double nx = -dir[1] * size * 0.6;
+        double ny = dir[0] * size * 0.6;
+        if (filled) {
+            g.setFill(Color.BLACK);
+            g.fillPolygon(
+                    new double[]{tip[0], bx + nx, bx - nx},
+                    new double[]{tip[1], by + ny, by - ny}, 3);
+        } else {
+            g.setStroke(Color.BLACK);
+            g.setLineWidth(Math.max(1, size * 0.25));
+            g.strokePolyline(
+                    new double[]{bx + nx, tip[0], bx - nx},
+                    new double[]{by + ny, tip[1], by - ny}, 3);
+        }
     }
 
     private void drawRuler(GraphicsContext g, int cols, int rows) {

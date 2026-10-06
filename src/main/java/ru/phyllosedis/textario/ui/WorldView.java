@@ -5,6 +5,9 @@ import org.springframework.stereotype.Service;
 import ru.phyllosedis.textario.console.MapRenderer;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
+import ru.phyllosedis.textario.logistics.port.LogisticPort;
+import ru.phyllosedis.textario.logistics.port.PortSide;
+import ru.phyllosedis.textario.logistics.port.PortType;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
 import ru.phyllosedis.textario.resource.ResourceType;
@@ -26,7 +29,8 @@ public class WorldView {
     private final MapRenderer mapRenderer;
     private final ComponentManager cm;
 
-    public record Cell(int x, int y, String terrain, char glyph, boolean occupied) {
+    public record Cell(int x, int y, String terrain, char glyph, boolean occupied,
+                         List<PortSide> inputs, List<PortSide> outputs) {
     }
 
     public List<Cell> snapshot(int x0, int y0, int w, int h) {
@@ -44,7 +48,22 @@ public class WorldView {
                     entityId = occupancyGrid.getEntityAt(x, y);
                 } catch (Exception ignored) {
                 }
-                cells.add(new Cell(x, y, terrain.name(), mapRenderer.glyphAt(x, y), entityId != null));
+                List<PortSide> inputs = List.of();
+                List<PortSide> outputs = List.of();
+                if (entityId != null) {
+                    LogisticPort ports = cm.get(entityId, LogisticPort.class);
+                    if (ports != null) {
+                        inputs = ports.getPorts().stream()
+                                .filter(p -> PortType.UNDEFINED.getByOrdinal(p.type()) == PortType.INPUT)
+                                .map(p -> PortSide.UNDEFINED.getByOrdinal(p.side()))
+                                .toList();
+                        outputs = ports.getPorts().stream()
+                                .filter(p -> PortType.UNDEFINED.getByOrdinal(p.type()) == PortType.OUTPUT)
+                                .map(p -> PortSide.UNDEFINED.getByOrdinal(p.side()))
+                                .toList();
+                    }
+                }
+                cells.add(new Cell(x, y, terrain.name(), mapRenderer.glyphAt(x, y), entityId != null, inputs, outputs));
             }
         }
         return cells;
