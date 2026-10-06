@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
+import ru.phyllosedis.textario.console.GameCommands;
 import ru.phyllosedis.textario.console.MapRenderer;
 import ru.phyllosedis.textario.engine.spring.EntityBlueprintService;
 import ru.phyllosedis.textario.logistics.splitter.SplitMode;
@@ -16,6 +17,7 @@ import ru.phyllosedis.textario.resource.Tier;
 public class GameInitializer implements CommandLineRunner {
 
     private final EntityBlueprintService entityBlueprintService;
+    private final GameCommands gameCommands;
     private final MapRenderer mapRenderer;
 
     @Override
@@ -35,6 +37,13 @@ public class GameInitializer implements CommandLineRunner {
         safe(() -> entityBlueprintService.createFurnace(5, 26, Tier.ONE));
         safe(() -> entityBlueprintService.createInserter(5, 28, Tier.ONE, ResourceType.EARTH, 0));
         safe(() -> entityBlueprintService.createChest(5, 29, Tier.ONE));
+
+        // Сборка шестерёнок из плит: сундук -> рука -> сборщик -> рука -> сундук
+        safe(() -> entityBlueprintService.createInserter(5, 30, Tier.ONE, ResourceType.EARTH, 0));
+        safe(() -> entityBlueprintService.createAssembler(5, 31, Tier.ONE));
+        safe(() -> entityBlueprintService.createInserter(5, 33, Tier.ONE, ResourceType.EARTH, 0));
+        safe(() -> entityBlueprintService.createChest(5, 34, Tier.ONE));
+        System.out.println("[init] " + gameCommands.setRecipe("5:31", "шестерёнки"));
 
         // Медная линия: бур -> рука -> сундук
         safe(() -> entityBlueprintService.createMiner(12, 25, Tier.ONE, ResourceType.COPPER_ORE));

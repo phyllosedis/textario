@@ -51,6 +51,14 @@ public class ComponentManager {
         return entityComponents != null && entityComponents.containsKey(componentClass);
     }
 
+    /**
+     * Полное удаление сущности (снос постройки).
+     */
+    public void removeEntity(long id) {
+        storage.remove(id);
+        updateEntityInCache(id);
+    }
+
     @SuppressWarnings("unchecked")
     public <T extends Component> T get(long id, Class<T> componentClass) {
         Map<Class<? extends Component>, Component> entityComponents = storage.get(id);

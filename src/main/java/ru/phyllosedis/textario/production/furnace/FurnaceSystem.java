@@ -9,23 +9,25 @@ import ru.phyllosedis.textario.engine.ecs.system.AbstractSystem;
 import ru.phyllosedis.textario.inventory.InventoryComponent;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
+import ru.phyllosedis.textario.production.recipe.RecipeBook;
 import ru.phyllosedis.textario.production.station.OperationFinishedMarkerComponent;
 import ru.phyllosedis.textario.resource.ResourceType;
 import ru.phyllosedis.textario.resource.SystemOrder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Requires({FurnaceComponent.class, OperationFinishedMarkerComponent.class, InventoryComponent.class})
 @Component
 @Order(SystemOrder.FURNACE)
 public class FurnaceSystem extends AbstractSystem {
 
-    private final FurnaceRecipes recipes;
+    private final RecipeBook book;
 
-    public FurnaceSystem(ComponentFactoryRegistry cfm, ComponentManager cm, FurnaceRecipes recipes) {
+    public FurnaceSystem(ComponentFactoryRegistry cfm, ComponentManager cm, RecipeBook book) {
         super(cfm, cm);
-        this.recipes = recipes;
+        this.book = book;
     }
 
     @Override
@@ -47,11 +49,24 @@ public class FurnaceSystem extends AbstractSystem {
         }
 
         ResourceType ore = ResourceType.UNDEFINED.getByOrdinal(oreSlot.resource());
-        ResourceType plate = recipes.outputFor(ore).orElse(ResourceType.UNDEFINED);
-        int plates = Math.min(cycles, oreSlot.count());
+        RecipeBook.Recipe recipe = book.furnaceRecipeFor(ore).orElse(null);
+        if (recipe == null) {
+            cm.add(id, cfm.create(new ProgressComponent.Args(0.0)));
+            cm.remove(id, OperationFinishedMarkerComponent.class);
+            return;
+        }
+        Map.Entry<ResourceType, Integer> output = recipe.outputs().entrySet().iterator().next();
+        int need = recipe.inputs().getOrDefault(ore, 1);
+        int plates = Math.min(cycles, oreSlot.count() / need);
 
-        consume(id, inventory, oreSlot, plates);
-        cm.add(id, cfm.create(new DispatchedProductComponent.Args(plate, plates)));
+        if (plates <= 0) {
+            cm.add(id, cfm.create(new ProgressComponent.Args(0.0)));
+            cm.remove(id, OperationFinishedMarkerComponent.class);
+            return;
+        }
+
+        consume(id, inventory, oreSlot, need * plates);
+        cm.add(id, cfm.create(new DispatchedProductComponent.Args(output.getKey(), output.getValue() * plates)));
         cm.add(id, cfm.create(new ProgressComponent.Args(0.0)));
         cm.remove(id, OperationFinishedMarkerComponent.class);
     }
@@ -59,7 +74,8 @@ public class FurnaceSystem extends AbstractSystem {
     private InventoryComponent.Slot findSmeltableSlot(InventoryComponent inventory) {
         return inventory.getSlots().stream()
                 .filter(slot -> slot.count() > 0)
-                .filter(slot -> recipes.isSmeltable(ResourceType.UNDEFINED.getByOrdinal(slot.resource())))
+                .filter(slot -> book.furnaceRecipeFor(
+                        ResourceType.UNDEFINED.getByOrdinal(slot.resource())).isPresent())
                 .findFirst()
                 .orElse(null);
     }

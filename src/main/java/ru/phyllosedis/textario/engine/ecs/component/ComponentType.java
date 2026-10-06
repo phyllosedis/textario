@@ -22,6 +22,7 @@ public enum ComponentType implements Type<ComponentType> {
 
     LOGISTIC,
     ROTATION,
+    ASSEMBLER,
     UNDEFINED;
 
     @Override

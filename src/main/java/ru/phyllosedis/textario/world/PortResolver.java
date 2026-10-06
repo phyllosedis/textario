@@ -54,4 +54,30 @@ public final class PortResolver {
             default -> new int[]{dx, dy};
         };
     }
+
+    /**
+     * Куда смотрит выход (FRONT): 0 вниз, 1 влево, 2 вверх, 3 вправо.
+     */
+    public static int parseDirection(String word) {
+        if (word == null) {
+            return 0;
+        }
+        return switch (word.toLowerCase()) {
+            case "down", "вниз", "s", "юг" -> 0;
+            case "left", "влево", "a", "запад" -> 1;
+            case "up", "вверх", "w", "север" -> 2;
+            case "right", "вправо", "d", "восток" -> 3;
+            default -> 0;
+        };
+    }
+
+    public static String directionName(int rotation) {
+        return switch (((rotation % 4) + 4) % 4) {
+            case 0 -> "вниз";
+            case 1 -> "влево";
+            case 2 -> "вверх";
+            case 3 -> "вправо";
+            default -> "?";
+        };
+    }
 }

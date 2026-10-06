@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.phyllosedis.textario.bootstrap.TextarioApplication;
+import ru.phyllosedis.textario.console.GameCommands;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.spring.EntityBlueprintService;
@@ -28,6 +29,9 @@ class PrototypeChainTest {
 
     @Autowired
     private ComponentFactoryRegistry cfm;
+
+    @Autowired
+    private GameCommands gameCommands;
 
     @Test
     @DisplayName("Уголь доезжает из бура в сундук через манипулятор")
@@ -84,5 +88,45 @@ class PrototypeChainTest {
                 .sum();
         System.out.println("[test] сундук-приёмник #" + dst + " уголь: " + coal);
         assertTrue(coal > 0, "повёрнутая рука должна перевезти уголь вбок");
+    }
+
+    @Test
+    @DisplayName("Сборщик крафтит шестерёнки из плит")
+    void assemblerCraftsGears() throws Exception {
+        long asm = blueprints.createAssembler(50, 30, Tier.ONE);
+        String set = gameCommands.setRecipe("50:30", "шестерёнки");
+        assertTrue(set.startsWith("OK"), "рецепт должен выбраться: " + set);
+        cm.add(asm, cfm.create(new InventoryComponent.Args(4, 50,
+                List.of(new InventoryComponent.ReadableSlot(ResourceType.IRON_PLATE, 4)))));
+
+        Thread.sleep(5000);
+
+        InventoryComponent inv = cm.get(asm, InventoryComponent.class);
+        int gears = inv.getSlots().stream()
+                .filter(s -> ResourceType.UNDEFINED.getByOrdinal(s.resource()) == ResourceType.IRON_GEAR)
+                .mapToInt(InventoryComponent.Slot::count)
+                .sum();
+        System.out.println("[test] сборщик #" + asm + " шестерёнки: " + gears);
+        assertTrue(gears >= 2, "из 4 плит должно выйти 2 шестерёнки");
+    }
+
+    @Test
+    @DisplayName("info показывает постройку, delete сносит её")
+    void infoAndDemolish() {
+        long chest = blueprints.createChest(60, 60, Tier.ONE);
+
+        String info = gameCommands.info("chest@60:60");
+        assertTrue(info.contains("60:60"), "info должно показать координаты: " + info);
+        assertTrue(info.contains("chest"), "info должно показать тип: " + info);
+
+        String badRef = gameCommands.info("belt@60:60");
+        assertTrue(badRef.startsWith("FAIL"), "чужой тип в ref должен отвергаться: " + badRef);
+
+        String demolished = gameCommands.demolish("60:60");
+        assertTrue(demolished.startsWith("OK"), "снос должен сработать: " + demolished);
+        assertTrue(gameCommands.entityAt(60, 60) == null, "клетка должна освободиться");
+        assertTrue(gameCommands.info("60:60").startsWith("FAIL"), "после сноса там пусто");
+
+        System.out.println("[test] снесён сундук #" + chest + ": " + demolished);
     }
 }

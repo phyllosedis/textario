@@ -10,6 +10,10 @@ import ru.phyllosedis.textario.logistics.port.PortSide;
 import ru.phyllosedis.textario.logistics.port.PortType;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.production.ProgressComponent;
+import ru.phyllosedis.textario.production.assembler.AssemblerComponent;
+import ru.phyllosedis.textario.production.recipe.RecipeBook;
+import ru.phyllosedis.textario.production.DispatchedProductComponent;
+import ru.phyllosedis.textario.production.ProgressComponent;
 import ru.phyllosedis.textario.resource.ResourceType;
 import ru.phyllosedis.textario.world.OccupancyGrid;
 import ru.phyllosedis.textario.world.PortResolver;
@@ -30,6 +34,7 @@ public class WorldView {
     private final OccupancyGrid occupancyGrid;
     private final MapRenderer mapRenderer;
     private final ComponentManager cm;
+    private final RecipeBook book;
 
     public record Cell(int x, int y, String terrain, char glyph, boolean occupied,
                          List<PortSide> inputs, List<PortSide> outputs) {
@@ -105,6 +110,17 @@ public class WorldView {
             return sb.toString();
         }
         sb.append(" | ").append(mapRenderer.glyphAt(x, y)).append(" #").append(entityId);
+        RotationComponent rotation = cm.get(entityId, RotationComponent.class);
+        if (rotation != null) {
+            sb.append(" смотрит ").append(PortResolver.directionName(rotation.getSteps()));
+        }
+        AssemblerComponent assembler = cm.get(entityId, AssemblerComponent.class);
+        if (assembler != null) {
+            String recipe = book.byId(assembler.getRecipeId())
+                    .map(r -> r.name() + " (" + r.id() + ")")
+                    .orElse("рецепт не выбран");
+            sb.append(" рецепт: ").append(recipe);
+        }
         InventoryComponent inv = cm.get(entityId, InventoryComponent.class);
         if (inv != null && !inv.getSlots().isEmpty()) {
             sb.append(" inv=[");

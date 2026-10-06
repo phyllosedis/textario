@@ -20,18 +20,26 @@ public class CommandParser {
             return "";
         }
         String[] parts = line.trim().split("\\s+");
+        // Шаблон "<ref> set <рецепт>": assembler@10:42 set шестерёнки
+        if (parts.length >= 3 && parts[1].equalsIgnoreCase("set")) {
+            return commands.setRecipe(parts[0], joinFrom(parts, 2));
+        }
         try {
             return switch (parts[0].toLowerCase()) {
-                case "help" -> """
-                        map [x y w h] — показать карту
-                        inv — показать склады и буферы
-                        miner x y ORE — бур (IRON_ORE/COPPER_ORE/COAL)
-                        belt x y [направление] | ins x y [направление]
-                        направление: down/left/up/right (выход смотрит туда)
-                        chest x y | fur x y
-                        spl x y MODE — разделитель (ROUND_ROBIN/BALANCED/...)
-                        rot x y — повернуть ленту/руку на 90°
-                        quit — выход""";
+                case "help" -> parts.length >= 2 && parts[1].equalsIgnoreCase("placeable")
+                        ? commands.placeableText()
+                        : parts.length >= 2 && parts[1].equalsIgnoreCase("recipes")
+                        ? commands.recipesText()
+                        : """
+                        команды: map inv info delete recipes placeable miner belt ins chest fur spl assembler rot
+                        подробно: help placeable | help recipes
+                        <ref> — это x:y или тип@x:y, например belt@5:21
+                        <ref> set <рецепт> — выбрать рецепт сборщика""";
+                case "placeable" -> commands.placeableText();
+                case "recipes" -> commands.recipesText();
+                case "info" -> commands.info(joinFrom(parts, 1));
+                case "delete", "del", "remove", "demolish" -> commands.demolish(joinFrom(parts, 1));
+                case "assembler" -> commands.placeAssembler(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
                 case "map" -> parts.length >= 5
                         ? commands.map(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]),
                                 Integer.parseInt(parts[3]), Integer.parseInt(parts[4]))
@@ -55,5 +63,14 @@ public class CommandParser {
         } catch (Exception e) {
             return "ошибка: " + e.getMessage();
         }
+    }
+
+    private static String joinFrom(String[] parts, int from) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = from; i < parts.length; i++) {
+            if (sb.length() > 0) sb.append(' ');
+            sb.append(parts[i]);
+        }
+        return sb.toString();
     }
 }

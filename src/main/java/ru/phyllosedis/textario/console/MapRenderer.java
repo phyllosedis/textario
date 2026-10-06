@@ -7,6 +7,7 @@ import ru.phyllosedis.textario.logistics.belt.BeltMarkerComponent;
 import ru.phyllosedis.textario.logistics.inserter.InserterMarkerComponent;
 import ru.phyllosedis.textario.logistics.splitter.SplitterMarkerComponent;
 import ru.phyllosedis.textario.production.furnace.FurnaceMarkerComponent;
+import ru.phyllosedis.textario.production.assembler.AssemblerMarkerComponent;
 import ru.phyllosedis.textario.production.mining.MiningMarkerComponent;
 import ru.phyllosedis.textario.resource.ResourceType;
 import ru.phyllosedis.textario.storage.ChestMarkerComponent;
@@ -33,7 +34,7 @@ public class MapRenderer {
             }
             sb.append("\n");
         }
-        sb.append("M=бур B=лента I=рука S=разделитель C=сундук F=печь | f=Fe c=Cu k=уголь .=земля\n");
+        sb.append("M=бур B=лента I=рука S=разделитель C=сундук F=печь A=сборщик | f=Fe c=Cu k=уголь .=земля\n");
         return sb.toString();
     }
 
@@ -54,6 +55,7 @@ public class MapRenderer {
             if (cm.has(entityId, SplitterMarkerComponent.class)) return 'S';
             if (cm.has(entityId, ChestMarkerComponent.class)) return 'C';
             if (cm.has(entityId, FurnaceMarkerComponent.class)) return 'F';
+            if (cm.has(entityId, AssemblerMarkerComponent.class)) return 'A';
             return '?';
         }
         ResourceType terrain;

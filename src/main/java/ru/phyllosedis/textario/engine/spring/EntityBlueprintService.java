@@ -6,6 +6,7 @@ import ru.phyllosedis.textario.logistics.belt.BeltFactory;
 import ru.phyllosedis.textario.logistics.inserter.InserterFactory;
 import ru.phyllosedis.textario.logistics.splitter.SplitMode;
 import ru.phyllosedis.textario.logistics.splitter.SplitterFactory;
+import ru.phyllosedis.textario.production.assembler.AssemblerFactory;
 import ru.phyllosedis.textario.production.furnace.FurnaceFactory;
 import ru.phyllosedis.textario.production.mining.MinerFactory;
 import ru.phyllosedis.textario.resource.ResourceCategory;
@@ -29,6 +30,10 @@ public class EntityBlueprintService {
 
     public Map<Long, String> createdEntities() {
         return Map.copyOf(createdEntities);
+    }
+
+    public void forget(long id) {
+        createdEntities.remove(id);
     }
 
     private void note(long id, String description) {
@@ -149,6 +154,20 @@ public class EntityBlueprintService {
                 .height(2)
                 .build());
         note(id, "furnace@" + x + ":" + y);
+        return id;
+    }
+
+    public long createAssembler(int x, int y, Tier tier) {
+        long id = prepareEntity(x, y, 2, 2, ResourceCategory.SOIL);
+        ef.get(AssemblerFactory.class).create(AssemblerFactory.Args.builder()
+                .id(id)
+                .tier(tier)
+                .x(x)
+                .y(y)
+                .width(2)
+                .height(2)
+                .build());
+        note(id, "assembler@" + x + ":" + y);
         return id;
     }
 }

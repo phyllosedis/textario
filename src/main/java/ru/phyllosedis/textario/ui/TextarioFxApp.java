@@ -61,7 +61,8 @@ public class TextarioFxApp extends Application {
             'I', Color.web("#30a0e0"),
             'S', Color.web("#a030e0"),
             'C', Color.web("#c08040"),
-            'F', Color.web("#e04030")
+            'F', Color.web("#e04030"),
+            'A', Color.web("#30c060")
     );
 
     private WorldView worldView;
@@ -225,6 +226,26 @@ public class TextarioFxApp extends Application {
             });
             menu.getItems().add(rotate);
         }
+        if (entityId != null && commands.isAssembler(entityId)) {
+            javafx.scene.control.Menu recipeMenu = new javafx.scene.control.Menu("Рецепт");
+            for (ru.phyllosedis.textario.production.recipe.RecipeBook.Recipe recipe : commands.assemblerRecipes()) {
+                MenuItem item = new MenuItem(recipe.name() + " (" + recipe.id() + ")");
+                item.setOnAction(ev -> {
+                    statusPos.setText(commands.setRecipe(x + ":" + y, recipe.id()));
+                    redraw();
+                });
+                recipeMenu.getItems().add(item);
+            }
+            menu.getItems().add(recipeMenu);
+        }
+        if (entityId != null) {
+            MenuItem demolish = new MenuItem("Снести ✕");
+            demolish.setOnAction(ev -> {
+                statusPos.setText(commands.demolish(x + ":" + y));
+                redraw();
+            });
+            menu.getItems().add(demolish);
+        }
 
         menu.getItems().add(new SeparatorMenuItem());
         menu.getItems().add(buildItem("Бур (Fe)", () -> commands.placeMiner(x, y, ResourceType.IRON_ORE)));
@@ -234,6 +255,7 @@ public class TextarioFxApp extends Application {
         menu.getItems().add(dirMenu("Рука", (xx, yy, rot) -> commands.placeInserter(xx, yy, rot), x, y));
         menu.getItems().add(buildItem("Сундук", () -> commands.placeChest(x, y)));
         menu.getItems().add(buildItem("Печь", () -> commands.placeFurnace(x, y)));
+        menu.getItems().add(buildItem("Сборщик", () -> commands.placeAssembler(x, y)));
         menu.getItems().add(buildItem("Разделитель", () -> commands.placeSplitter(x, y, SplitMode.ROUND_ROBIN)));
         menu.getItems().add(new SeparatorMenuItem());
         MenuItem cancel = new MenuItem("Отмена (Esc)");
@@ -385,6 +407,20 @@ public class TextarioFxApp extends Application {
                 g.setLineWidth(Math.max(1, s * 0.05));
                 g.strokeLine(cx - s * 0.3, cy - s * 0.05, cx + s * 0.3, cy - s * 0.05);
                 g.fillRect(cx - s * 0.05, cy - s * 0.1, s * 0.1, s * 0.12);
+            }
+            case 'A' -> {
+                // Сборщик: шестерня
+                g.setLineWidth(Math.max(1.5, s * 0.08));
+                for (int i = 0; i < 6; i++) {
+                    double a = Math.PI / 3 * i;
+                    double x1 = cx + Math.cos(a) * s * 0.22;
+                    double y1 = cy + Math.sin(a) * s * 0.22;
+                    double x2 = cx + Math.cos(a) * s * 0.36;
+                    double y2 = cy + Math.sin(a) * s * 0.36;
+                    g.strokeLine(x1, y1, x2, y2);
+                }
+                g.strokeOval(cx - s * 0.22, cy - s * 0.22, s * 0.44, s * 0.44);
+                g.fillOval(cx - s * 0.08, cy - s * 0.08, s * 0.16, s * 0.16);
             }
             default -> {
                 g.setFont(Font.font("Monospaced", Math.max(8, s * 0.5)));

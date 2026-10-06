@@ -40,6 +40,16 @@ public enum ResourceType implements Type<ResourceType> {
             ResourceCategory.ORE
     ),
 
+    IRON_GEAR(
+            ContentState.SOLID,
+            ResourceCategory.ORE
+    ),
+
+    COPPER_CABLE(
+            ContentState.SOLID,
+            ResourceCategory.ORE
+    ),
+
     EARTH(
             ContentState.SOLID,
             ResourceCategory.SOIL
