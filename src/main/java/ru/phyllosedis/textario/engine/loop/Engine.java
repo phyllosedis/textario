@@ -15,7 +15,12 @@ public class Engine {
     @Scheduled(fixedRateString = "${textario.tick-rate-ms}")
     public void gameTick() {
         for (System system : systems) {
-            system.update();
+            try {
+                system.update();
+            } catch (Exception e) {
+                java.lang.System.err.println("[Engine] система " + system.getClass().getSimpleName()
+                        + " упала на тике: " + e.getMessage());
+            }
         }
     }
 }

@@ -30,6 +30,16 @@ public enum ResourceType implements Type<ResourceType> {
             Set.of()
     ),
 
+    IRON_PLATE(
+            ContentState.SOLID,
+            ResourceCategory.ORE
+    ),
+
+    COPPER_PLATE(
+            ContentState.SOLID,
+            ResourceCategory.ORE
+    ),
+
     EARTH(
             ContentState.SOLID,
             ResourceCategory.SOIL
@@ -80,6 +90,9 @@ public enum ResourceType implements Type<ResourceType> {
     public boolean hasExactCategory(
             ResourceCategory requestCategory
     ) {
+        if (this.category == null || requestCategory == null) {
+            return false;
+        }
         return this.category.equals(requestCategory);
     }
 

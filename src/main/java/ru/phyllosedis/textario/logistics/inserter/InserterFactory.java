@@ -36,12 +36,9 @@ public class InserterFactory extends AbstractEntityFactory<InserterFactory.Args>
         long id = args.getId();
 
         InserterBalance.InserterStats stats = bf.getStats(InserterBalance.class, args.getTier());
-        cm.add(id, cfm.create(new StationMarkerComponent.Args()));
-        cm.add(id, cfm.create(new TierMarkerComponent.Args()));
+        cm.add(id, cfm.create(new InserterMarkerComponent.Args()));
         cm.add(id, cfm.create(new InserterComponent.Args(stats.getTransferSpeed(), stats.getRange(), stats.getStackSize(), Set.of(ContentState.SOLID))));
         cm.add(id, cfm.create(new InventoryComponent.Args(1, stats.getStackSize(), List.of())));
-        cm.add(id, cfm.create(new ProduceSpeedComponent.Args(stats.getTransferSpeed())));
-        cm.add(id, cfm.create(new ProgressComponent.Args(0)));
         cm.add(id, cfm.create(new LogisticPort.Args(List.of(
                 new LogisticPort.ReadablePort(
                         0,

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 import org.springframework.stereotype.Component;
 import ru.phyllosedis.textario.engine.balance.AbstractBalance;
+import ru.phyllosedis.textario.engine.balance.AbstractBalance.AbstractStats;
 import ru.phyllosedis.textario.resource.Tier;
 
 // TODO можно грузить из файла

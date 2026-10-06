@@ -1,5 +1,6 @@
 package ru.phyllosedis.textario.production.mining;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.Requires;
@@ -17,9 +18,9 @@ import ru.phyllosedis.textario.world.PositionComponent;
         OperationFinishedMarkerComponent.class,
         TierMarkerComponent.class,
         PositionComponent.class,
-        DispatchedProductComponent.class,
         InventoryComponent.class
 })
+@Slf4j
 public abstract class MiningResourceSystem extends AbstractSystem {
 
     public MiningResourceSystem(ComponentFactoryRegistry cfm, ComponentManager cm) {
@@ -29,28 +30,24 @@ public abstract class MiningResourceSystem extends AbstractSystem {
     @Override
     protected void updateEntity(long id) {
         MiningComponent mining = cm.get(id, MiningComponent.class);
+        OperationFinishedMarkerComponent finished = cm.get(id, OperationFinishedMarkerComponent.class);
+        if (mining == null || finished == null) {
+            return;
+        }
         ResourceType resType = ResourceType.UNDEFINED.getByOrdinal(mining.getResourceType());
+        int count = finished.getCompletedCycles();
 
-        DispatchedProductComponent dispatchedProductComponent = cm.get(id, DispatchedProductComponent.class);
-        InventoryComponent inventory = cm.get(id, InventoryComponent.class);
-        int count = dispatchedProductComponent.getCount();
-
-
-        // переназначение произведённого продукта с определением типа продукта
-//        cm.remove(id, DispatchedProductComponent.class);
-//        cm.add(id, cfm.create(new DispatchedProductComponent.Args(resType, count)));
-
-//        inventory.
-
+        // Складываем добытое в выходной буфер, сброс прогресса, снятие флага
+        cm.add(id, cfm.create(new DispatchedProductComponent.Args(resType, count)));
         cm.add(id, cfm.create(new ProgressComponent.Args(0.0)));
-
-        onComplete(id, resType, dispatchedProductComponent.getCount());
-
         cm.remove(id, OperationFinishedMarkerComponent.class);
+
+        onComplete(id, resType, count);
     }
 
     protected void onComplete(long id, ResourceType resType, int count) {
-        System.out.println("Станция " + id + " завершила добычу (кол-во предметов: " + count + ") тип предмета " + resType + " агрегатное состояние предмета " + resType.getState());
+        log.debug("Станция {} завершила добычу (кол-во предметов: {}) тип предмета {} агрегатное состояние предмета {}",
+                id, count, resType, resType.getState());
     }
 
 }

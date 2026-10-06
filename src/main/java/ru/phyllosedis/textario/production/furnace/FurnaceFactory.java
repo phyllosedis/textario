@@ -1,0 +1,50 @@
+package ru.phyllosedis.textario.production.furnace;
+
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
+import org.springframework.stereotype.Component;
+import ru.phyllosedis.textario.engine.balance.BalanceFactory;
+import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
+import ru.phyllosedis.textario.engine.ecs.ComponentManager;
+import ru.phyllosedis.textario.engine.ecs.component.AssociatedMarker;
+import ru.phyllosedis.textario.engine.ecs.entity.AbstractEntityFactory;
+import ru.phyllosedis.textario.inventory.InventoryComponent;
+import ru.phyllosedis.textario.logistics.ContentStateComponent;
+import ru.phyllosedis.textario.production.ProduceSpeedComponent;
+import ru.phyllosedis.textario.production.ProgressComponent;
+import ru.phyllosedis.textario.production.station.StationMarkerComponent;
+import ru.phyllosedis.textario.production.station.TierMarkerComponent;
+import ru.phyllosedis.textario.resource.ContentState;
+
+import java.util.List;
+
+@Component
+@AssociatedMarker(FurnaceMarkerComponent.class)
+public class FurnaceFactory extends AbstractEntityFactory<FurnaceFactory.Args> {
+
+    public FurnaceFactory(ComponentManager cm, ComponentFactoryRegistry cfm, BalanceFactory bf) {
+        super(cm, cfm, bf);
+    }
+
+    @Override
+    public void create(Args args) {
+        super.create(args);
+
+        long id = args.getId();
+        FurnaceBalance.FurnaceStats stats = bf.getStats(FurnaceBalance.class, args.getTier());
+
+        cm.add(id, cfm.create(new StationMarkerComponent.Args()));
+        cm.add(id, cfm.create(new ProgressComponent.Args(0)));
+        cm.add(id, cfm.create(new ContentStateComponent.Args(ContentState.SOLID)));
+        cm.add(id, cfm.create(new TierMarkerComponent.Args()));
+        cm.add(id, cfm.create(new ProduceSpeedComponent.Args(stats.getSpeed())));
+        cm.add(id, cfm.create(new FurnaceMarkerComponent.Args()));
+        cm.add(id, cfm.create(new FurnaceComponent.Args()));
+        cm.add(id, cfm.create(new InventoryComponent.Args(4, 50, List.of())));
+    }
+
+    @Getter
+    @SuperBuilder
+    public static class Args extends AbstractEntityFactory.Args {
+    }
+}

@@ -1,5 +1,6 @@
 package ru.phyllosedis.textario.production.mining;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
@@ -12,6 +13,7 @@ import ru.phyllosedis.textario.resource.marker.GasStateMarkerComponent;
 @Component
 @Order(SystemOrder.MINING)
 @Requires({GasStateMarkerComponent.class})
+@Slf4j
 public class GasMiningResourceSystem extends MiningResourceSystem {
 
     public GasMiningResourceSystem(ComponentFactoryRegistry cfm, ComponentManager cm) {
@@ -21,6 +23,6 @@ public class GasMiningResourceSystem extends MiningResourceSystem {
     @Override
     protected void onComplete(long id, ResourceType resType, int count) {
         super.onComplete(id, resType, count);
-        System.out.println("[Добыча газа] станция #" + id + " тип ресурса: " + resType + " количество " + count);
+        log.debug("[Добыча газа] станция #{} тип ресурса: {} количество {}", id, resType, count);
     }
 }

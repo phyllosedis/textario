@@ -20,8 +20,7 @@ public abstract class InventorySystem extends AbstractSystem {
     /**
      * Внутренний хелпер для наследников: проверяет место и добавляет предмет.
      * Возвращает true, если предмет поместился.
-     */
-    protected boolean insertItem(long id, ResourceType resType) {
+     */    protected boolean insertItem(long id, ResourceType resType) {
         InventoryComponent oldInv = cm.get(id, InventoryComponent.class);
         int currentStackLimit = oldInv.getStackSize();
 
@@ -59,5 +58,20 @@ public abstract class InventorySystem extends AbstractSystem {
 
         cm.add(id, cfm.create(new InventoryComponent.Args(oldInv.getSize(), oldInv.getStackSize(), readableSlots)));
         return true;
+    }
+
+    /**
+     * Кладёт count предметов пачкой, возвращает сколько влезло.
+     */
+    protected int insertStack(long id, ResourceType resType, int count) {
+        int inserted = 0;
+        for (int i = 0; i < count; i++) {
+            if (insertItem(id, resType)) {
+                inserted++;
+            } else {
+                break;
+            }
+        }
+        return inserted;
     }
 }

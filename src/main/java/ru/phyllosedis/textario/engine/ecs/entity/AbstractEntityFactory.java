@@ -27,7 +27,7 @@ public abstract class AbstractEntityFactory<T extends AbstractEntityFactory.Args
 
     @Getter
     @SuperBuilder
-    protected abstract static class Args {
+    public abstract static class Args {
         private final long id;
         private final Tier tier;
         private final int x;

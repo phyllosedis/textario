@@ -22,6 +22,11 @@ public final class StationProgressSystem extends AbstractSystem {
 
     @Override
     protected void updateEntity(long id) {
+        // Противодавление: пока выходной буфер не разобран, станция стоит
+        if (cm.has(id, DispatchedProductComponent.class)) {
+            return;
+        }
+
         ProgressComponent progress = cm.get(id, ProgressComponent.class);
         ProduceSpeedComponent produceSpeedComponent = cm.get(id, ProduceSpeedComponent.class);
 
@@ -38,7 +43,6 @@ public final class StationProgressSystem extends AbstractSystem {
 
         if (isFinished) {
             cm.add(id, cfm.create(new OperationFinishedMarkerComponent.Args(completedCycles)));
-            cm.add(id, cfm.create(new DispatchedProductComponent.Args(completedCycles)));
         }
     }
 }

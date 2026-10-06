@@ -8,6 +8,7 @@ import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.component.AssociatedMarker;
 import ru.phyllosedis.textario.engine.ecs.entity.AbstractEntityFactory;
+import ru.phyllosedis.textario.inventory.InventoryComponent;
 import ru.phyllosedis.textario.logistics.ContentStateComponent;
 import ru.phyllosedis.textario.logistics.port.LogisticPort;
 import ru.phyllosedis.textario.logistics.port.PortSide;
@@ -37,6 +38,7 @@ public class BeltFactory extends AbstractEntityFactory<BeltFactory.Args> {
         cm.add(id, cfm.create(new BeltComponent.Args(stats.getSpeed(), stats.getThroughput())));
         cm.add(id, cfm.create(new ProduceSpeedComponent.Args(stats.getSpeed())));
         cm.add(id, cfm.create(new ContentStateComponent.Args(ContentState.SOLID)));
+        cm.add(id, cfm.create(new InventoryComponent.Args(1, 4, List.of())));
         cm.add(id, cfm.create(new LogisticPort.Args(List.of(
                 new LogisticPort.ReadablePort(
                         0,

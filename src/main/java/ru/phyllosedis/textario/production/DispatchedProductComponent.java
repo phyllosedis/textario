@@ -13,16 +13,18 @@ import ru.phyllosedis.textario.resource.ResourceType;
 @AutoFactory(ComponentType.DISPATCHED_PRODUCT)
 public class DispatchedProductComponent extends Component {
 
+    private final int resource;
     private final int count;
 
-    protected DispatchedProductComponent(int count) {
+    protected DispatchedProductComponent(int resource, int count) {
+        this.resource = resource;
         this.count = count;
     }
 
-    public record Args(int count) implements ComponentArgs<DispatchedProductComponent> {
+    public record Args(ResourceType type, int count) implements ComponentArgs<DispatchedProductComponent> {
         @Override
         public DispatchedProductComponent instantiate() {
-            return new DispatchedProductComponent(count);
+            return new DispatchedProductComponent(type.ordinal(), count);
         }
     }
 }

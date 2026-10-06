@@ -1,15 +1,22 @@
 package ru.phyllosedis.textario.inventory.solid;
 
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 import ru.phyllosedis.textario.engine.ecs.ComponentManager;
 import ru.phyllosedis.textario.engine.ecs.ComponentFactoryRegistry;
+import ru.phyllosedis.textario.engine.ecs.component.Requires;
+import ru.phyllosedis.textario.inventory.InventoryComponent;
 import ru.phyllosedis.textario.logistics.ContentStateComponent;
 import ru.phyllosedis.textario.production.DispatchedProductComponent;
 import ru.phyllosedis.textario.inventory.InventorySystem;
 import ru.phyllosedis.textario.resource.ContentState;
 import ru.phyllosedis.textario.resource.ResourceType;
+import ru.phyllosedis.textario.resource.SystemOrder;
 
-
-public abstract class SolidToInventorySystem extends InventorySystem {
+@Component
+@Order(SystemOrder.INVENTORY)
+@Requires({InventoryComponent.class, ContentStateComponent.class, DispatchedProductComponent.class})
+public class SolidToInventorySystem extends InventorySystem {
     protected SolidToInventorySystem(ComponentFactoryRegistry cfm, ComponentManager cm) {
         super(cfm, cm);
     }
@@ -19,19 +26,21 @@ public abstract class SolidToInventorySystem extends InventorySystem {
         ContentStateComponent state = cm.get(id, ContentStateComponent.class);
 
         // Обрабатываем ТОЛЬКО твердые предметы (буры, заводы)
-        if (ContentState.UNDEFINED.getByOrdinal(state.getContentState()) != ContentState.SOLID) return;
+        if (state == null || ContentState.UNDEFINED.getByOrdinal(state.getContentState()) != ContentState.SOLID) return;
 
         DispatchedProductComponent dispatched = cm.get(id, DispatchedProductComponent.class);
+        if (dispatched == null) return;
 
-        // Используем твой метод insertItem из InventorySystem!
-//        boolean success = insertItem(id, ResourceType.UNDEFINED.getByOrdinal(dispatched.getResourceType()));
+        ResourceType resType = ResourceType.UNDEFINED.getByOrdinal(dispatched.getResource());
+        int inserted = insertStack(id, resType, dispatched.getCount());
 
-//        if (success) {
-//             Если успешно переложили в инвентарь — очищаем буфер выдачи
-//            cm.remove(id, DispatchedProductComponent.class);
-//        } else {
-//            System.out.println("[Бур #" + id + "] Внутренний инвентарь забит, руда ждет выгрузки манипулятором!");
-//             Буфер НЕ удаляем. Бур остановится (потому что ProductionProgressSystem можно научить не тикать, если буфер не пуст)
-//        }
+        if (inserted >= dispatched.getCount()) {
+            // Всё влезло — очищаем буфер выдачи
+            cm.remove(id, DispatchedProductComponent.class);
+        } else if (inserted > 0) {
+            // Влезло частично — обновляем остаток
+            cm.add(id, cfm.create(new DispatchedProductComponent.Args(resType, dispatched.getCount() - inserted)));
+        }
+        // Ничего не влезло — буфер остаётся, станция стоит (противодавление)
     }
 }
