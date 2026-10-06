@@ -9,30 +9,41 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import ru.phyllosedis.textario.console.CommandParser;
 import ru.phyllosedis.textario.console.GameCommands;
 import ru.phyllosedis.textario.engine.loop.TickGate;
+import ru.phyllosedis.textario.logistics.splitter.SplitMode;
+import ru.phyllosedis.textario.resource.ResourceType;
 
 import java.util.List;
 import java.util.Map;
 
 /**
  * Векторный вьювер мира на Canvas. Только читает WorldView
- * и шлёт команды через CommandParser — логики симуляции тут нет.
- * Тяни мышью чтобы двигать карту, колесо — зум.
+ * и шлёт команды через CommandParser/GameCommands — логики
+ * симуляции тут нет.
+ * ЛКМ — выбрать клетку, ПКМ — подменю постройки,
+ * тяни с ЛКМ — двигать карту, колесо — зум.
  */
 public class TextarioFxApp extends Application {
+
+    private static final double RULER = 44;
 
     private static final Map<String, Color> TERRAIN = Map.of(
             "EARTH", Color.web("#2b2b2b"),
@@ -59,14 +70,18 @@ public class TextarioFxApp extends Application {
 
     private Canvas canvas;
     private TextArea info;
-    private Label status;
+    private Label statusSim;
+    private Label statusPos;
     private int cell = 28;
     private int offX;
     private int offY;
-    private double dragStartX;
-    private double dragStartY;
-    private int dragOffX;
-    private int dragOffY;
+    private int selX = Integer.MIN_VALUE;
+    private int selY = Integer.MIN_VALUE;
+    private double pressX;
+    private double pressY;
+    private int pressOffX;
+    private int pressOffY;
+    private boolean dragged;
 
     @Override
     public void start(Stage stage) {
@@ -81,15 +96,39 @@ public class TextarioFxApp extends Application {
 
         canvas = new Canvas(960, 700);
         canvas.setOnMousePressed(e -> {
-            dragStartX = e.getX();
-            dragStartY = e.getY();
-            dragOffX = offX;
-            dragOffY = offY;
+            pressX = e.getX();
+            pressY = e.getY();
+            pressOffX = offX;
+            pressOffY = offY;
+            dragged = false;
         });
         canvas.setOnMouseDragged(e -> {
-            offX = dragOffX - (int) ((e.getX() - dragStartX) / cell);
-            offY = dragOffY - (int) ((e.getY() - dragStartY) / cell);
+            int dx = (int) ((e.getX() - pressX) / cell);
+            int dy = (int) ((e.getY() - pressY) / cell);
+            if (dx != 0 || dy != 0) {
+                dragged = true;
+            }
+            offX = pressOffX - dx;
+            offY = pressOffY - dy;
             redraw();
+        });
+        canvas.setOnMouseClicked(e -> {
+            if (dragged || e.getButton() != javafx.scene.input.MouseButton.PRIMARY) {
+                return;
+            }
+            int[] cellPos = toWorld(e.getX(), e.getY());
+            if (cellPos != null) {
+                selX = cellPos[0];
+                selY = cellPos[1];
+                statusPos.setText(safeDescribe(selX, selY));
+                redraw();
+            }
+        });
+        canvas.setOnMouseMoved(e -> {
+            int[] cellPos = toWorld(e.getX(), e.getY());
+            if (cellPos != null) {
+                statusPos.setText(safeDescribe(cellPos[0], cellPos[1]));
+            }
         });
         canvas.setOnScroll(e -> {
             if (e.getDeltaY() > 0 && cell < 56) {
@@ -99,6 +138,7 @@ public class TextarioFxApp extends Application {
             }
             redraw();
         });
+        canvas.setOnContextMenuRequested(this::showBuildMenu);
         canvas.widthProperty().addListener((o, a, b) -> redraw());
         canvas.heightProperty().addListener((o, a, b) -> redraw());
 
@@ -107,7 +147,7 @@ public class TextarioFxApp extends Application {
             boolean nowPaused = !tickGate.isPaused();
             tickGate.setPaused(nowPaused);
             pause.setText(nowPaused ? "Продолжить" : "Пауза");
-            status.setText(nowPaused ? "пауза" : "тикает");
+            statusSim.setText(nowPaused ? "пауза" : "тикает");
         });
 
         info = new TextArea();
@@ -127,13 +167,15 @@ public class TextarioFxApp extends Application {
             cmd.clear();
         });
 
-        status = new Label("тикает");
+        statusSim = new Label("тикает");
+        statusPos = new Label("?:?");
 
-        VBox side = new VBox(8, pause, status, info, cmd);
+        VBox side = new VBox(8, pause, statusSim, statusPos, info, cmd);
         side.setPadding(new Insets(8));
         side.setPrefWidth(340);
 
-        HBox legend = new HBox(10, new Label("M бур  B лента  I рука  S разделитель  C сундук  F печь"));
+        HBox legend = new HBox(10,
+                new Label("M бур  B лента  I рука  S разделитель  C сундук  F печь | ЛКМ выбрать/тянуть  ПКМ построить"));
         legend.setPadding(new Insets(4));
 
         BorderPane root = new BorderPane(canvas, null, side, legend, null);
@@ -151,12 +193,72 @@ public class TextarioFxApp extends Application {
         ticker.play();
     }
 
+    private void showBuildMenu(ContextMenuEvent e) {
+        int[] cellPos = toWorld(e.getX(), e.getY());
+        if (cellPos == null) {
+            return;
+        }
+        int x = cellPos[0];
+        int y = cellPos[1];
+        selX = x;
+        selY = y;
+
+        ContextMenu menu = new ContextMenu();
+        MenuItem title = new MenuItem("Клетка " + x + ":" + y + " — " + safeDescribe(x, y));
+        title.setDisable(true);
+        menu.getItems().add(title);
+        menu.getItems().add(new SeparatorMenuItem());
+        menu.getItems().add(buildItem("Бур (Fe)", () -> commands.placeMiner(x, y, ResourceType.IRON_ORE)));
+        menu.getItems().add(buildItem("Бур (Cu)", () -> commands.placeMiner(x, y, ResourceType.COPPER_ORE)));
+        menu.getItems().add(buildItem("Бур (уголь)", () -> commands.placeMiner(x, y, ResourceType.COAL)));
+        menu.getItems().add(buildItem("Лента", () -> commands.placeBelt(x, y)));
+        menu.getItems().add(buildItem("Рука", () -> commands.placeInserter(x, y)));
+        menu.getItems().add(buildItem("Сундук", () -> commands.placeChest(x, y)));
+        menu.getItems().add(buildItem("Печь", () -> commands.placeFurnace(x, y)));
+        menu.getItems().add(buildItem("Разделитель", () -> commands.placeSplitter(x, y, SplitMode.ROUND_ROBIN)));
+        menu.show(canvas, e.getScreenX(), e.getScreenY());
+    }
+
+    private MenuItem buildItem(String name, BuildAction action) {
+        MenuItem item = new MenuItem(name);
+        item.setOnAction(e -> {
+            String result = action.build();
+            statusPos.setText(result);
+            redraw();
+        });
+        return item;
+    }
+
+    private interface BuildAction {
+        String build();
+    }
+
+    private int[] toWorld(double mouseX, double mouseY) {
+        if (mouseX < RULER || mouseY < RULER) {
+            return null;
+        }
+        int x = offX + (int) ((mouseX - RULER) / cell);
+        int y = offY + (int) ((mouseY - RULER) / cell);
+        if (x < 0 || y < 0 || x >= worldView.mapWidth() || y >= worldView.mapHeight()) {
+            return null;
+        }
+        return new int[]{x, y};
+    }
+
+    private String safeDescribe(int x, int y) {
+        try {
+            return worldView.describe(x, y);
+        } catch (Exception e) {
+            return x + ":" + y + " ?";
+        }
+    }
+
     private void redraw() {
         if (canvas == null || worldView == null) {
             return;
         }
-        int cols = Math.max(1, (int) (canvas.getWidth() / cell) + 1);
-        int rows = Math.max(1, (int) (canvas.getHeight() / cell) + 1);
+        int cols = Math.max(1, (int) ((canvas.getWidth() - RULER) / cell) + 1);
+        int rows = Math.max(1, (int) ((canvas.getHeight() - RULER) / cell) + 1);
         List<WorldView.Cell> cells;
         try {
             cells = worldView.snapshot(offX, offY, cols, rows);
@@ -166,9 +268,10 @@ public class TextarioFxApp extends Application {
         GraphicsContext g = canvas.getGraphicsContext2D();
         g.setFill(Color.web("#161616"));
         g.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
+
         for (WorldView.Cell c : cells) {
-            double px = (c.x() - offX) * cell;
-            double py = (c.y() - offY) * cell;
+            double px = RULER + (c.x() - offX) * cell;
+            double py = RULER + (c.y() - offY) * cell;
             Color base = TERRAIN.getOrDefault(c.terrain(), Color.web("#111111"));
             g.setFill(base);
             g.fillRect(px + 1, py + 1, cell - 2, cell - 2);
@@ -182,5 +285,43 @@ public class TextarioFxApp extends Application {
                 g.fillText(String.valueOf(c.glyph()), px + cell * 0.32, py + cell * 0.68);
             }
         }
+
+        if (selX != Integer.MIN_VALUE) {
+            double px = RULER + (selX - offX) * cell;
+            double py = RULER + (selY - offY) * cell;
+            g.setStroke(Color.WHITE);
+            g.setLineWidth(2);
+            g.strokeRect(px + 1, py + 1, cell - 2, cell - 2);
+        }
+
+        drawRuler(g, cols, rows);
+    }
+
+    private void drawRuler(GraphicsContext g, int cols, int rows) {
+        g.setFill(Color.web("#0d0d0d"));
+        g.fillRect(0, 0, canvas.getWidth(), RULER);
+        g.fillRect(0, 0, RULER, canvas.getHeight());
+        g.setFill(Color.web("#9a9a9a"));
+        g.setFont(Font.font("Monospaced", 11));
+        g.setTextAlign(TextAlignment.CENTER);
+
+        int step = cell >= 20 ? 1 : cell >= 12 ? 2 : 5;
+        for (int i = 0; i < cols; i++) {
+            int x = offX + i;
+            if (x % step != 0) {
+                continue;
+            }
+            g.fillText(String.valueOf(x), RULER + i * cell + cell / 2.0, 18);
+            g.fillText(String.valueOf(x), RULER + i * cell + cell / 2.0, 32);
+        }
+        g.setTextAlign(TextAlignment.RIGHT);
+        for (int j = 0; j < rows; j++) {
+            int y = offY + j;
+            if (y % step != 0) {
+                continue;
+            }
+            g.fillText(String.valueOf(y), RULER - 6, RULER + j * cell + cell / 2.0 + 4);
+        }
+        g.setTextAlign(TextAlignment.LEFT);
     }
 }
