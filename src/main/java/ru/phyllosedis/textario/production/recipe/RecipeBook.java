@@ -55,14 +55,17 @@ public class RecipeBook {
     }
 
     public Optional<Recipe> byIdOrName(String word) {
-        String query = word.trim();
+        String query = word.trim().toLowerCase().replace('_', '-');
         Optional<Recipe> exact = recipes.stream()
-                .filter(r -> r.id().equalsIgnoreCase(query) || r.name().equalsIgnoreCase(query))
+                .filter(r -> r.id().equalsIgnoreCase(query) || r.name().equalsIgnoreCase(word.trim()))
                 .findFirst();
         if (exact.isPresent()) {
             return exact;
         }
-        return recipes.stream().filter(r -> r.name().toLowerCase().contains(query.toLowerCase())).findFirst();
+        return recipes.stream()
+                .filter(r -> r.id().toLowerCase().contains(query)
+                        || r.name().toLowerCase().contains(word.trim().toLowerCase()))
+                .findFirst();
     }
 
     public Optional<Recipe> furnaceRecipeFor(ResourceType input) {

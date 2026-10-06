@@ -23,7 +23,8 @@ public class CommandParser {
             Map.entry("stats", "stats - счётчики добычи/плавки/сборки и время тика по системам"),
             Map.entry("pause", "pause - вкл/выкл паузу (строить удобно на паузе)"),
             Map.entry("tick", "tick N - прокрутить N тиков вручную, работает и на паузе"),
-            Map.entry("info", "info <ref> - что стоит на клетке: info 5:21, info belt@5:21"),
+            Map.entry("set", "set <ref> <рецепт> - например set assembler@10:42 iron-gear (или <ref> set <рецепт>)"),
+            Map.entry("info", "info <ref> - что стоит на клетке (голый <ref> тоже работает)"),
             Map.entry("delete", "delete <ref> - снести постройку (алиасы: del, remove, demolish)"),
             Map.entry("recipes", "recipes - все рецепты с указанием станции"),
             Map.entry("placeable", "placeable - что можно строить (то же: help placeable)"),
@@ -40,7 +41,6 @@ public class CommandParser {
             Map.entry("wave", "wave - статус волн; wave go - запустить следующую волну сейчас"),
             Map.entry("under", "under x y dir entry|exit - подземка 1x1, пара вход/выход до 4 клеток"),
             Map.entry("rot", "rot x y - повернуть ленту/руку/разделитель на 90 градусов"),
-            Map.entry("set", "<ref> set <рецепт> - например assembler@10:42 set iron-gear"),
             Map.entry("save", "save [файл] - сохранить мир (по умолчанию textario-save.json)"),
             Map.entry("load", "load [файл] - загрузить мир (склады будут пустые)"),
             Map.entry("quit", "quit - выход")
@@ -73,6 +73,7 @@ public class CommandParser {
                 case "resume" -> commands.resume();
                 case "tick" -> commands.stepTicks(argInt(parts, 1, "tick"));
                 case "info" -> commands.info(joinFrom(need(parts, 2, "info"), 1));
+                case "set" -> commands.setRecipe(parts[1], joinFrom(need(parts, 3, "set"), 2));
                 case "delete", "del", "remove", "demolish" ->
                         commands.demolish(joinFrom(need(parts, 2, "delete"), 1));
                 case "miner" -> commands.placeMiner(argInt(parts, 1, "miner"), argInt(parts, 2, "miner"));
@@ -107,7 +108,9 @@ public class CommandParser {
                 case "save" -> saves.save(parts.length >= 2 ? parts[1] : "textario-save.json");
                 case "load" -> saves.load(parts.length >= 2 ? parts[1] : "textario-save.json");
                 case "quit", "exit" -> "quit";
-                default -> "не знаю команды '" + parts[0] + "', введи help";
+                default -> looksLikeRef(parts[0]) && parts.length == 1
+                        ? commands.info(parts[0])
+                        : "не знаю команды '" + parts[0] + "', введи help";
             };
         } catch (IllegalArgumentException e) {
             return "ошибка: " + e.getMessage();
@@ -118,10 +121,17 @@ public class CommandParser {
 
     private String index() {
         return """
-                команды: map inv stats pause tick info delete recipes placeable miner belt ins chest fur spl assembler under turret core spawn wave rot save load
+                команды: map inv stats pause tick info delete recipes placeable miner belt ins chest fur spl assembler under turret core spawn wave rot save load set
                 подробно: help placeable | help recipes | help <команда> (например help spl)
-                <ref> - это x:y или тип@x:y, например belt@5:21
-                <ref> set <рецепт> - выбрать рецепт сборщика""";
+                <ref> - это x:y или тип@x:y, например belt@5:21 (голый <ref> показывает info)
+                рецепт: <ref> set <имя> или set <ref> <имя>""";
+    }
+
+    /**
+     * Похоже на адрес постройки: x:y или тип@x:y.
+     */
+    private static boolean looksLikeRef(String word) {
+        return word.matches("(?i)([a-zа-я]+@)?\\d+[:,]\\d+");
     }
 
     private String helpFor(String cmd) {

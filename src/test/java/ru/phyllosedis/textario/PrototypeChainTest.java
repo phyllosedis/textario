@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.phyllosedis.textario.bootstrap.TextarioApplication;
 import ru.phyllosedis.textario.console.GameCommands;
+import ru.phyllosedis.textario.console.CommandParser;
 import ru.phyllosedis.textario.combat.EnemyMarkerComponent;
 import ru.phyllosedis.textario.engine.metrics.MetricsService;
 import ru.phyllosedis.textario.inventory.OutputInventoryComponent;
@@ -43,6 +44,9 @@ class PrototypeChainTest {
 
     @Autowired
     private MetricsService metrics;
+
+    @Autowired
+    private CommandParser parser;
 
     @Test
     @DisplayName("Уголь доезжает из бура в сундук через манипулятор")
@@ -225,6 +229,25 @@ class PrototypeChainTest {
         assertTrue(stats.contains("ТИК #"), "stats должен показать счётчик тиков: " + stats);
         assertTrue(metrics.get("mined", ResourceType.IRON_ORE) > 0, "демо-бур должен копать железо");
         System.out.println("[test] stats:\n" + stats);
+    }
+
+    @Test
+    @DisplayName("Рецепт ставится тремя путями, ref понимает подчёркивание")
+    void recipeSetPaths() {
+        String placed = parser.execute("assembler 90 90");
+        assertTrue(placed.startsWith("OK"), placed);
+
+        String viaSuffix = parser.execute("assembler@90:90 set iron_gear");
+        assertTrue(viaSuffix.startsWith("OK"), viaSuffix);
+
+        String viaVerb = parser.execute("set assembler@90:90 copper-cable");
+        assertTrue(viaVerb.startsWith("OK"), viaVerb);
+
+        String bare = parser.execute("assembler@90:90");
+        assertTrue(bare.contains("90:90") && bare.contains("медный кабель"), "голый ref показывает info: " + bare);
+
+        String unknown = parser.execute("абракадабра");
+        assertTrue(unknown.contains("не знаю команды"), unknown);
     }
 
     @Test
