@@ -14,7 +14,9 @@ import ru.phyllosedis.textario.production.mining.MinerFactory;
 import ru.phyllosedis.textario.resource.ResourceCategory;
 import ru.phyllosedis.textario.resource.ResourceType;
 import ru.phyllosedis.textario.resource.Tier;
+import ru.phyllosedis.textario.resource.capability.Mineable;
 import ru.phyllosedis.textario.storage.ChestFactory;
+import ru.phyllosedis.textario.world.OccupancyGrid;
 import ru.phyllosedis.textario.world.PlacementService;
 
 import java.util.Map;
@@ -25,6 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @RequiredArgsConstructor
 public class EntityBlueprintService {
     private final PlacementService ps;
+    private final OccupancyGrid occupancyGrid;
     private final EntityFactoryRegistry ef;
 
     private final AtomicLong idGenerator = new AtomicLong(0);
@@ -76,10 +79,13 @@ public class EntityBlueprintService {
     }
 
     /**
-     * 1. СОЗДАНИЕ БУРОВ / ШАХТ (Разные состояния материи)
+     * 1. СОЗДАНИЕ БУРОВ / ШАХТ (Разные состояния материи).
+     * Какую руду копать — бур решает сам по карте под корпусом 2x2
+     * (мажоритарный тип). Игрок тип не подсказывает.
      */
-    public long createMiner(int x, int y, Tier tier, ResourceType resourceType) {
+    public long createMiner(int x, int y, Tier tier) {
         long id = prepareEntity(x, y, 2, 2, ResourceCategory.ORE);
+        ResourceType resourceType = dominantOre(x, y, 2, 2);
 
         ef.get(MinerFactory.class)
                 .create(MinerFactory.Args.builder()
@@ -96,6 +102,23 @@ public class EntityBlueprintService {
         note(id, "miner@" + x + ":" + y + " " + resourceType);
         place(id, new Placement("miner", x, y, tier, resourceType.name()));
         return id;
+    }
+
+    private ResourceType dominantOre(int startX, int startY, int width, int height) {
+        java.util.Map<ResourceType, Integer> votes = new java.util.HashMap<>();
+        for (int x = startX; x < startX + width; x++) {
+            for (int y = startY; y < startY + height; y++) {
+                ResourceType terrain = occupancyGrid.getTerrainAt(x, y);
+                if (terrain.hasCapability(Mineable.class)) {
+                    votes.merge(terrain, 1, Integer::sum);
+                }
+            }
+        }
+        return votes.entrySet().stream()
+                .max(java.util.Map.Entry.comparingByValue())
+                .map(java.util.Map.Entry::getKey)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "под буром на " + startX + ":" + startY + " нет руды"));
     }
 
     /**

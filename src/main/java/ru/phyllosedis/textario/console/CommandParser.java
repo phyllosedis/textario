@@ -24,7 +24,7 @@ public class CommandParser {
             Map.entry("delete", "delete <ref> - снести постройку (алиасы: del, remove, demolish)"),
             Map.entry("recipes", "recipes - все рецепты с указанием станции"),
             Map.entry("placeable", "placeable - что можно строить (то же: help placeable)"),
-            Map.entry("miner", "miner x y ORE - бур 2x2, только на руду; ORE: IRON_ORE, COPPER_ORE, COAL"),
+            Map.entry("miner", "miner x y - бур 2x2, руду определяет сам по карте под корпусом"),
             Map.entry("belt", "belt x y [dir] - лента 1x1; dir: down/left/up/right (куда смотрит выход)"),
             Map.entry("ins", "ins x y [dir] - рука 1x1; dir: down/left/up/right"),
             Map.entry("chest", "chest x y - сундук 1x1"),
@@ -64,11 +64,7 @@ public class CommandParser {
                 case "info" -> commands.info(joinFrom(need(parts, 2, "info"), 1));
                 case "delete", "del", "remove", "demolish" ->
                         commands.demolish(joinFrom(need(parts, 2, "delete"), 1));
-                case "miner" -> {
-                    need(parts, 4, "miner");
-                    yield commands.placeMiner(argInt(parts, 1, "miner"), argInt(parts, 2, "miner"),
-                            argResource(parts));
-                }
+                case "miner" -> commands.placeMiner(argInt(parts, 1, "miner"), argInt(parts, 2, "miner"));
                 case "belt" -> commands.placeBelt(argInt(parts, 1, "belt"), argInt(parts, 2, "belt"),
                         parts.length >= 4 ? GameCommands.parseDirection(parts[3]) : 0);
                 case "ins" -> commands.placeInserter(argInt(parts, 1, "belt"), argInt(parts, 2, "ins"),
@@ -138,16 +134,6 @@ public class CommandParser {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(
                     "аргумент " + (i + 1) + " должен быть числом, использование: " + USAGE.get(cmd));
-        }
-    }
-
-    private static ResourceType argResource(String[] parts) {
-        need(parts, 4, "miner");
-        try {
-            return ResourceType.valueOf(parts[3].toUpperCase());
-        } catch (Exception e) {
-            throw new IllegalArgumentException(
-                    "ORE должно быть IRON_ORE/COPPER_ORE/COAL, использование: " + USAGE.get("miner"));
         }
     }
 

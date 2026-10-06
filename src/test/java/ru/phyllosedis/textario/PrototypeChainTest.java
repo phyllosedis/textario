@@ -41,7 +41,7 @@ class PrototypeChainTest {
     @Test
     @DisplayName("Уголь доезжает из бура в сундук через манипулятор")
     void coalReachesChest() throws Exception {
-        long miner = blueprints.createMiner(18, 20, Tier.ONE, ResourceType.COAL);
+        long miner = blueprints.createMiner(18, 20, Tier.ONE);
         blueprints.createInserter(18, 22, Tier.ONE, ResourceType.EARTH, 0);
         long chest = blueprints.createChest(18, 23, Tier.ONE);
 

@@ -45,9 +45,9 @@ public class GameCommands {
     private final WorldView worldView;
     private final MapRenderer mapRenderer;
 
-    public String placeMiner(int x, int y, ResourceType ore) {
+    public String placeMiner(int x, int y) {
         return tryPlace(() -> {
-            long id = blueprints.createMiner(x, y, Tier.ONE, ore);
+            long id = blueprints.createMiner(x, y, Tier.ONE);
             return "бур #" + id + " на " + x + ":" + y;
         });
     }
@@ -353,7 +353,7 @@ public class GameCommands {
     public String placeableText() {
         return """
                 РАЗМЕЩАЕМЫЕ:
-                  miner x y ORE - бур 2x2, ORE = IRON_ORE/COPPER_ORE/COAL, только на руду
+                  miner x y - бур 2x2, руду определяет сам по карте (только на руду)
                   belt x y [dir] - лента 1x1
                   ins x y [dir] - рука 1x1
                   chest x y - сундук 1x1

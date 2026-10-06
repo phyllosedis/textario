@@ -258,9 +258,7 @@ public class TextarioFxApp extends Application {
         }
 
         menu.getItems().add(new SeparatorMenuItem());
-        menu.getItems().add(buildItem("Бур (Fe)", () -> commands.placeMiner(x, y, ResourceType.IRON_ORE)));
-        menu.getItems().add(buildItem("Бур (Cu)", () -> commands.placeMiner(x, y, ResourceType.COPPER_ORE)));
-        menu.getItems().add(buildItem("Бур (уголь)", () -> commands.placeMiner(x, y, ResourceType.COAL)));
+        menu.getItems().add(buildItem("Бур (руда сама)", () -> commands.placeMiner(x, y)));
         menu.getItems().add(dirMenu("Лента", (xx, yy, rot) -> commands.placeBelt(xx, yy, rot), x, y));
         menu.getItems().add(dirMenu("Рука", (xx, yy, rot) -> commands.placeInserter(xx, yy, rot), x, y));
         menu.getItems().add(buildItem("Сундук", () -> commands.placeChest(x, y)));

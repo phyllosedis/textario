@@ -91,7 +91,7 @@ public class SaveService {
         try {
             Tier tier = Tier.valueOf(s.tier());
             switch (s.kind()) {
-                case "miner" -> blueprints.createMiner(s.x(), s.y(), tier, ResourceType.valueOf(s.extra()));
+                case "miner" -> blueprints.createMiner(s.x(), s.y(), tier);
                 case "belt" -> blueprints.createBelt(s.x(), s.y(), tier, ResourceType.EARTH, s.rotation());
                 case "inserter" -> blueprints.createInserter(s.x(), s.y(), tier, ResourceType.EARTH, s.rotation());
                 case "chest" -> blueprints.createChest(s.x(), s.y(), tier);

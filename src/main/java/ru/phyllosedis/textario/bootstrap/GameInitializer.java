@@ -34,7 +34,7 @@ public class GameInitializer implements CommandLineRunner {
 
     private void buildDemo() {
         // Железная линия: бур -> рука -> сундук -> лента -> рука -> печь -> рука -> сундук
-        safe(() -> entityBlueprintService.createMiner(5, 20, Tier.ONE, ResourceType.IRON_ORE));
+        safe(() -> entityBlueprintService.createMiner(5, 20, Tier.ONE));
         safe(() -> entityBlueprintService.createInserter(5, 22, Tier.ONE, ResourceType.EARTH, 0));
         safe(() -> entityBlueprintService.createChest(5, 23, Tier.ONE));
         safe(() -> entityBlueprintService.createBelt(5, 24, Tier.ONE, ResourceType.EARTH, 0));
@@ -61,7 +61,7 @@ public class GameInitializer implements CommandLineRunner {
         System.out.println("[init] " + gameCommands.setRecipe("5:31", "шестерёнки"));
 
         // Медная линия: бур -> рука -> сундук
-        safe(() -> entityBlueprintService.createMiner(12, 25, Tier.ONE, ResourceType.COPPER_ORE));
+        safe(() -> entityBlueprintService.createMiner(12, 25, Tier.ONE));
         safe(() -> entityBlueprintService.createInserter(12, 27, Tier.ONE, ResourceType.EARTH, 0));
         safe(() -> entityBlueprintService.createChest(12, 28, Tier.ONE));
 
